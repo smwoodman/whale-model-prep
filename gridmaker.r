@@ -120,7 +120,7 @@ grid.cent.df <- data.frame(
 ); rm(lon)
 
 ### Write to .csv
-write.csv(grid.cent.coords, file = outfile, row.names = FALSE)
+write.csv(grid.cent.df, file = outfile, row.names = FALSE)
 
 
 ### Visualize grid is desired
