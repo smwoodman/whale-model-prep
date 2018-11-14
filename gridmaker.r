@@ -1,28 +1,39 @@
 # gridmaker.r --- creates uniform grid of decimal lat/longs based on 
-# input boundaries and pixel size (in degrees).
+#   input boundaries and pixel size (in degrees).
 # Calculates area size of each pixel in sq.km
 
-# Originally by Karin Forney and Elizabeth Becker
-# Modified by Sam Woodman Nov 2018 so grid does not have to be rectangular
+# Original code by Karin Forney and Elizabeth Becker
+# Modified by Sam Woodman Nov 2018 to use sf package and so grid does 
+#   not have to be rectangular
 
 
 ###############################################################################
-# New strategy: 
-# 1) st_sfc(st_polygon(list(as.matrix(x))), crs = crs.prov)
-# 2) Use st_grid_maker()
-# 3) Clip to 'study area' using st_intersection()
-
 library(sf)
-map.base <- st_as_sfc(maps::map('world2', plot = FALSE, fill = TRUE))
 
 
-#------------------------------------------------------------------------------
+###############################################################################
 # VARIABLES SET BY USER
 
 #----------------------------------------------------------
-### Extent of grid (study area). Boundary marks...
+### 1) Create map object to use while visualizing study area and/or grid
 
 ### EITHER ###
+# Use this section if using longitude range [0, 360]
+map.base <- st_as_sfc(maps::map('world2', plot = FALSE, fill = TRUE))
+
+### OR ###
+# Use this section if using longitude range [-180, 180]
+# map.base <- st_as_sfc(maps::map('world', plot = FALSE, fill = TRUE))
+
+
+#----------------------------------------------------------
+### 2) Define the study area (rectangular or otherwise)
+# The centroids of the grid cells (NOT grid cell edges) will start at the bottom-left corner of the study area,
+#   and thus proceed along the left and bottom edges of the study area.
+#   All grid cells whose centroids (NOT grid cell edges) are within the study area will be exported to the .csv file.
+
+### EITHER ###
+# Use this section for creating a rectangular grid defined by lon/lat min/max
 
 # latmin <- 32.5
 # latmax <- 42.0
@@ -34,6 +45,10 @@ map.base <- st_as_sfc(maps::map('world2', plot = FALSE, fill = TRUE))
 # )
 
 ###  OR  ###
+# Use this section to provide coordinates of a non-rectangular study area
+# Coordinates mus be enterds as "c(lon, lat)" where all longitudes are in 
+#   range [0, 360] or [-180, 180]. The first and the last set of coordinates
+#   must be the same.
 
 list.vertices <- list(
   c(243, 32),
@@ -48,106 +63,69 @@ list.vertices <- list(
 )
 poly.df <- data.frame(do.call(rbind, list.vertices))
 
+
 #----------------------------------------------------------
-### Path for .csv file with coordinates and areas
+### 3) Pixel size: the total length and width of each grid cell. 
+# Thus, the shortest disatance from a grid cell edge to the grid cell centroid will be 'pixel' / 2.
+
+# pixel <- .225                 # 25km
+# pixel <- .090                 # 10km
+# pixel <- 0.10                 # 0.1 degree for SeaGrant modeling project
+pixel <- .045                 # 5km
+# pixel <- .018                 # 2km
+
+
+#----------------------------------------------------------
+### 4) Path and filename for .csv file with grid cell centroid coordinates and areas
+
 outfile <- paste0(
   "Outputs/", 
-  "Grid_Lat", latmin, "to", latmax, "_Lon", lonmin, "to", lonmax, 
+  ifelse(
+    exists("latmin"), 
+    paste0("Grid_Lat", latmin, "to", latmax, "_Lon", lonmin, "to", lonmax), 
+    "Grid_Non-rectangle"
+  ),
   "_Step", pixel, "withArea.csv"
 )
 
-#----------------------------------------------------------
-### Pixel size
-pixel <- .045
 
-# 0.225: 25km
-# 0.090: 10km
-# 0.100: 0.1 degree (for SeaGrant modeling project)
-# 0.045: 5km
-# 0.018: 2km
+###############################################################################
+# CODE RUN BY USER - NO CHANGES NEEDED
 
-
-
-#------------------------------------------------------------------------------
-# Create and visualize study area polygon
+### Create and visualize study area polygon
 poly.bound <- st_sfc(st_polygon(list(as.matrix(poly.df))), crs = 4326) #4326 is WGS 84 coords
 plot(poly.bound, axes = TRUE, border = "red")
 plot(map.base, add = TRUE, col = "tan")
+# plot(poly.bound, add = TRUE, border = "red")
 
-# Create grid (for areas) and get *centroids* of polygons.
+### Create grid (for areas) and get *centroids* of polygons.
 # TODO: Should points be lower left vertices or centroids?
-system.time(grid <- st_make_grid(
+grid <- st_make_grid(
   poly.bound, cellsize = pixel, #what = "centers",
   offset = st_bbox(poly.bound)[c("xmin", "ymin")] - pixel / 2
-))
+)
 grid.cent <- st_set_precision(st_centroid(grid), 1e+10)
 
-# Get the centroids that are within the study area
+### Get the centroids that are within the study area
 grid.cent.which <- unlist(st_intersects(poly.bound, grid.cent))
 
-# Create data frame of centroid coordinates and area value
+### Create data frame of centroid coordinates and area value
 grid.cent.coords <- do.call(rbind, st_geometry(grid.cent)[grid.cent.which])
+lon <- grid.cent.coords[, 1]
 grid.cent.df <- data.frame(
   lat = grid.cent.coords[, 2], 
-  lon360 = grid.cent.coords[, 1],
-  lon180 = grid.cent.coords[, 1] - 360,
-  area_km = as.numeric(st_area(grid)[grid.cent.which]) / 1e+06
-)
+  lon360 = lon,
+  lon180 = ifelse(lon > 180, lon - 360, lon),
+  area_km = as.numeric(st_area(grid[grid.cent.which])) / 1e+06
+); rm(lon)
 
+### Write to .csv
 write.csv(grid.cent.coords, file = outfile, row.names = FALSE)
 
 
 ### Visualize grid is desired
-plot(poly.bound, axes = TRUE, border = "red")
-plot(grid, add = TRUE)
+plot(grid[grid.cent.which], axes = TRUE)
+plot(poly.bound, add = TRUE, border = "red")
 plot(map.base, add = TRUE, col = "tan")
 
-
 ###############################################################################
-###############################################################################
-# Old
-
-# rm(list=ls())                          # clears workspace
-# library(geosphere)
-# pixel.mat <- matrix(NA,5,2)
-# colnames(pixel.mat) <- c("x","y") 
-# eq.radius <- 6378.137
-# 
-# latmin <- 32.5
-# latmax <- 42.0
-# lonmin <- 360 - 125.0
-# lonmax <- 360 - 118.0
-# # pixel <- .225                 # 25km
-# # pixel <- .090                 # 10km
-# # pixel <- 0.10                 # 0.1 degree for SeaGrant modeling project
-# pixel <- .045                 # 5km
-# # pixel <- .018                 # 2km  (not run)
-# 
-# grid <- data.frame(lat=NULL,lon=NULL)
-# y <- Sys.time()
-# for (lat in seq(latmin,latmax, by=pixel)) {
-#   for (lon in seq(lonmin,lonmax, by=pixel)) {
-#     lon180 <- lon-360
-#     if (lat<latmax & lon<lonmax) {
-#       pixel.mat[1,]=c(lon180,lat)
-#       pixel.mat[2,]=c(lon180+pixel,lat)
-#       pixel.mat[3,]=c(lon180+pixel,lat+pixel)
-#       pixel.mat[4,]=c(lon180,lat+pixel)
-#       pixel.mat[5,]=pixel.mat[1,]
-#     }
-#     pixel.area <- areaPolygon(pixel.mat,eq.radius)
-#     grid <- rbind(grid, data.frame(lat=lat, lon360=lon, lon180=lon180, pixelkm2=pixel.area))       
-#   }
-# }
-# Sys.time() - y #~37s
-# 
-# outfil = paste0(
-#   "Outputs/",
-#   "Grid_Lat",latmin,"to",latmax,"_Lon",lonmin,"to",lonmax,"_Step",pixel,"withArea.csv"
-#   )
-# write.csv(grid, file = outfil)
-# 
-# dim(grid)
-# 
-# 
-
