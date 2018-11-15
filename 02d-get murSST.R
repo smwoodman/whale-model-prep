@@ -1,11 +1,17 @@
-### extract murSST (daily, 1km resolution); aka ultra-high resolution data set
-##  produced at JPL under the NASA MEaSUREs program (see http://mur.jpl.nasa.gov/).
+## extract murSST (daily, 1km resolution); aka ultra-high resolution data set
+## produced at JPL under the NASA MEaSUREs program (see http://mur.jpl.nasa.gov/).
 ## - version 4 as of April 2015.
-##  This dataset is part of the Multi-sensor Improved Sea Surface Temperatures (MURSST) project, which is part of the Group for High-Resolution Sea Surface Temperature (GHRSST) project.
-##  I downloaded one .nc-file per month (e.g. "mursst2010-07-01_2010-07-31.nc"), only North Sea;
-## see script: murSST_extractBymonth.r
-## update April 2016: a) new version available (fv04.1, jplMURSST41.nc?), I downloaded version 4.1 data for all months in the complete period 2005-2015; to use a consistent data source for any new analysis
-##  b) change "seg.data$Predictor.mean" to "seg.data$Predictor.center"; "seg.data$Predictor.mean" is now holding the mean of all pixels that are crossed by a segment (Segmean) (you would need this when your predictor has a fine resolution, like murSST with 1km) 
+## This dataset is part of the Multi-sensor Improved Sea Surface Temperatures (MURSST) project, 
+##   which is part of the Group for High-Resolution Sea Surface Temperature (GHRSST) project.
+## I downloaded one .nc-file per month (e.g. "mursst2010-07-01_2010-07-31.nc"), only North Sea;
+##  see script: murSST_extractBymonth.r
+## update April 2016: a) new version available (fv04.1, jplMURSST41.nc?), 
+## I downloaded version 4.1 data for all months in the complete period 2005-2015; to use a consistent data source for any new analysis
+## b) change "seg.data$Predictor.mean" to "seg.data$Predictor.center"; 
+##  "seg.data$Predictor.mean" is now holding the mean of all pixels that are crossed by a segment (Segmean) 
+##  (you would need this when your predictor has a fine resolution, like murSST with 1km) 
+
+## Modified Nov 2018 by Sam Woodman
 
 rm(list=ls())
 
@@ -27,8 +33,9 @@ names(ncinfo) <- c('yyyymm','nc.name')
 
 
 # Set path for nc files
-nc.path <- '/Volumes/ANGELO/Anita/DEPONS/mursst/'
-#nc.path<- 'C:/KAF/PROJECTS/SERDP-CCmodels/Anita/mursst/'
+# nc.path <- '/Volumes/ANGELO/Anita/DEPONS/mursst/'
+# nc.path <- 'C:/KAF/PROJECTS/SERDP-CCmodels/Anita/mursst/'
+nc.path <- "../whale-model-prep_data/mursst/"
 
 # load segment data & extract relevant fields
 load(file=paste(FIN.dir,"DEPONS_static.rdata",sep=""))
