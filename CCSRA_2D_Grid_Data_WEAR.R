@@ -2,7 +2,7 @@
 # CCSRA2D__Grid_Data.R  
 #
 #   Extracts CCSRA data from 2D prediction grids dervived by Mike Jacox's for 31-yr 
-#   reanalysis files (for 1991-2010) and the NRT (2011-201)5 .nc files:
+#   reanalysis files (for 1991-2010) and the NRT (2011-2015) .nc files:
 #
 #    'curl','sst', 'ssh', 'sss', 'ild', 'su', 'sv', 'sustr', 'svstr' 
 #
@@ -55,17 +55,24 @@ if (user=="KAF") {
   nc.path31 <- 'C:/KAF/PROJECTS/SERDP-CCmodels/CCE1991-2014/wcra31_daily/' 
   nc.pathNRT <- 'C:/KAF/PROJECTS/SERDP-CCmodels/CCE1991-2014/wcnrt_daily/'    
   out.path <- 'C:/KAF/PROJECTS/SERDP-CCmodels/CCE1991-2014/CCSRA_pred_grids/'
-} else {
+  
+} else if (user == "EAB") {
   nc.path31 <- 'C:/Users/EABECKER/Documents/HabModels_CCE_1991_2014/Grid_data/wcra31_daily/' 
   nc.pathNRT <- 'C:/Users/EABECKER/Documents/HabModels_CCE_1991_2014/Grid_data/wcnrt_daily/'    
   grid.path <- 'C:/Users/EABECKER/Documents/HabModels_CCE_2013/Datasets/EAB_CCE/CCE_Grid_Pred_Data/'
   out.path <- 'C:/Users/EABECKER/Documents/HabModels_CCE_1991_2014/Grid_data/CalCOFI/CCSRA_pred_grids/'
+  
+} else if (user == "SMW") {
+  nc.path31 <- '../whale-model-prep_data/CCSRA nc files/CCSRA_wcra31_daily_2D_Jacox/' 
+  nc.pathNRT <- '../whale-model-prep_data/CCSRA nc files/CCSRA_NRT2011-2017_daily_2D_Jacox/'    
+  grid.path <- '../whale-model-prep_data/Outputs/'
+  out.path <- '../whale-model-prep_data/Outputs/'
 }
 #
 # 
 # ---------------------------------------------------------------------------
 # Set Predictor variable names, and set up array with cruise dates which grid files 
-#  will be extracted from mthe nc files.
+#  will be extracted from the nc files.
 #
 ssh.calib <- 0.154     # calibration to add to ccsNRT to make consistent with ccsra31 
 Predictors <- c('sst', 'ssh', 'ild')
@@ -83,7 +90,7 @@ write.csv(grid.dates,"Grid.dates.csv")  # save dates for reference
 #  
 # Open grid pixel file and initialize variables
 #  
-gridfile <- 'Grid_Lat30to48_Lon226to244.5_Step0.1withArea.csv'
+gridfile <- 'Grid_Non-rectangle_3km.csv'
 grid.pixelfile <- paste(grid.path,gridfile,sep="")
 grid.pixels    <- read.csv(grid.pixelfile, header=TRUE)[,c(2,4)]
 names(grid.pixels) <- c('lat','lon')
