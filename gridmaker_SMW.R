@@ -98,7 +98,7 @@ outfile <- paste0(
   "../whale-model-prep_data/Outputs/", #Path to folder
   # paste0("Grid_Lat", latmin, "to", latmax, "_Lon", lonmin, "to", lonmax),
   "Grid_Non-rectangle", #Uncomment either this line or above line
-  "_Step", pixel, "withArea.csv"
+  "_3km.csv" # "_Step", pixel, "withArea.csv"
 )
 
 
