@@ -2,7 +2,7 @@ library(sf)
 
 ###############################################################################
 ### Read in and clip world land file
-x <- c(-130, -110, 30, 48)
+x <- c(-130, -110, 30, 50)
 range_poly_func <- function(x, poly.crs, buffer) {
   stopifnot(length(x) == 4)
   
@@ -22,6 +22,9 @@ map.world.bound <- st_intersection(map.world, bound)
 ocean <- st_erase(bound, map.world.bound)
 
 plot(ocean, col = "blue", axes = T)
+plot(map.world.bound, col = "tan", axes = T)
+st_write(ocean, "../whale-model-prep_data/shapefiles/US_west_coast_ocean.shp", )
+st_write(map.world.bound, "../whale-model-prep_data/shapefiles/US_west_coast_land.shp")
 
 
 ###############################################################################
