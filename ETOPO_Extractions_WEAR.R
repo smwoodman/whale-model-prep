@@ -4,7 +4,7 @@
 #
 #--------------------------------------------------------------------------------------
 # Clear workspace 
-#
+
 rm(list = ls())
 
 #-------------------------------SET UP FUNCTIONS---------------------------------------
@@ -45,7 +45,7 @@ out.data <- in.data
 ###############################################################################
 # Now extract depth data (point value and SD) -- this only needs to be done
 #   once for the grid pixels, and output is stored in a separate .csv file.
-# No rugosity nc file; just using SD of depth
+# No rugosity nc file; just using SD of depth for WEAR
 
 
 #------------------------------------------------------------------------------
@@ -57,6 +57,8 @@ ETOPO.lon   <- ncvar_get(nc.data, 'longitude')
 ETOPO.nrows <- length(ETOPO.lon)
 ETOPO.ncols <- length(ETOPO.lat)
 
+
+# # Write nc file depth matrix to csv file
 # depth <- ncvar_get(
 #   nc.data, 'altitude', start = c(1, 1),
 #   count = c(ETOPO.nrows, ETOPO.ncols), verbose = FALSE
@@ -65,15 +67,15 @@ ETOPO.ncols <- length(ETOPO.lat)
 # colnames(depth) <- ETOPO.lat
 # write.csv(depth, paste0(etopo.path, 'ETOPO1_CCS_bathy.csv'))
 
-
-# for() loop moved to bottom of file
+# # Notes
+# For a grid file of 30,877 coordinates, apply() is ~6s and for() is ~8s
 # ~5.8 seconds without special stuff
 # ~11.5 seconds with special stuff
 
 
 #------------------------------------------------------------------------------
 ### Create list-column with both depth and SD(depth) values
-# Sam note: nc file is indexed in order of (X, Y, Z, T) and ncvar_get() output
+# Sam note: nc file is indexed in dim order (X, Y, Z, T) and ncvar_get() output
 #   reflects that (i.e. rows correspond to lon and cols to lat of pred.data)
 out.data$depth_lc <- apply(cbind(lon, lat), 1, function(i) {
   if (anyNA(i)) {
@@ -90,8 +92,9 @@ out.data$depth_lc <- apply(cbind(lon, lat), 1, function(i) {
     numrows <- min(r.lon + 1, ETOPO.nrows) - row1 + 1  
     col1    <- max(c.lat - 1, 1)                        
     numcols <- min(c.lat + 1, ETOPO.ncols) - col1 + 1
+    if (!(numcols == 3 && numrows == 3)) warning("At edge of ETOPO grid")
     
-    # Get depth value of closest ETOPO point and 9 surrounding ETOPO values
+    # Get depth value of closest ETOPO point and 9 surrounding ETOPO points
     pred.data <- ncvar_get(
       nc.data, 'altitude', start = c(row1, col1),
       count = c(numrows, numcols), verbose = FALSE
@@ -132,7 +135,7 @@ out.data$depth_lc <- apply(cbind(lon, lat), 1, function(i) {
       depth.which <- which(
         (1:(numcols * numrows) %in% poly.depth.int) & (depth.all < 0)
       )
-
+      
       if (length(depth.which) > 0) {
         ## Which of those points is closest to the centroid
         cent.depth.dist <- as.numeric(st_distance(cent.sfc, depth.sf))
@@ -164,7 +167,7 @@ nc_close(nc.data)
 
 #------------------------------------------------------------------------------
 # Change depth and depth_sd for positive depth values (i.e. land) to NA
-# (this is only needed for grids which have land)
+# This is only needed for grids which have land
 
 land <- which(out.data$depth >= 0)
 
@@ -180,37 +183,3 @@ write.table(out.data, outfile, sep = "," , col.names = TRUE, row.names = FALSE)
 # sum(is.na(y$depth)) #11344
 
 ###############################################################################
-###############################################################################
-
-# For a grid file of 30,877 coordinates, apply() is ~6s and for() is ~8s
-
-# out.data <- in.data
-# out.data$depth <- NA
-# out.data$depth_sd <- NA
-# 
-# d <- Sys.time()
-# for (y in 1:num.pts) { #~5 sec for() loop
-#   if (!is.na(lat[y]) & !is.na(lon[y])) {
-#     r.lon <- which.min(abs(ETOPO.lon - lon[y]))
-#     c.lat <- which.min(abs(ETOPO.lat - lat[y]))
-# 
-#     # nrows and ncols are used if we are at the edge of the data grid
-#     row1    <- max(r.lon - 1, 1)
-#     numrows <- min(r.lon + 1, ETOPO.nrows) - row1 + 1
-#     col1    <- max(c.lat - 1, 1)
-#     numcols <- min(c.lat + 1, ETOPO.ncols) - col1 + 1
-# 
-#     # newlon <- ETOPO.lon[row1:(row1 + numrows - 1)]
-#     # newlat <- ETOPO.lat[col1:(col1 + numcols - 1)]
-# 
-#     pred.data <- ncvar_get(
-#       nc.data, 'altitude', start = c(row1, col1),
-#       count = c(numrows, numcols), verbose = FALSE
-#     )
-#     out.data$depth[y]  <- pred.data[1 + (r.lon - row1), 1 + (c.lat - col1)][1]
-#     out.data$depth_sd[y]  <- sd(pred.data[pred.data < 0])
-#     
-#   } # end of if there are no NAs
-# }   # y loop (lat/lon points)
-# Sys.time() - d
-
