@@ -26,9 +26,14 @@ library(sf)
 # Set path for ETOPO nc file, input segment file and output files 
 # Open grid pixel file and initialize variables
 
+#----------------------------------------------------------
+### FOR KAF
 # etopo.path <- 'C:/KAF/COAST/ETOPO/'
 # path <-  'C:/KAF/PROJECTS/SERDP-CCmodels/WhalePreyModels/RockfishCruiseModels/'
 
+
+#----------------------------------------------------------
+### For SMW grid
 etopo.path <- "../whale-model-prep_data/etopo180_N10-60_W150-100/"
 path       <- "../whale-model-prep_data/Outputs/"
 
@@ -38,6 +43,21 @@ in.data    <- read.csv(infile)
 num.pts    <- nrow(in.data)
 lon        <- in.data$lon180
 lat        <- in.data$lat
+
+out.data <- in.data
+
+
+#----------------------------------------------------------
+### For SMW segments
+etopo.path <- "../whale-model-prep_data/etopo180_N10-60_W150-100/"
+path       <- "../whale-model-prep_data/Segments/"
+
+infile     <- paste0(path, 'LgWhale_CCE_91_14_3km_Segs_BF0_6.csv')
+outfile    <- paste0(path, 'WEAR_seg_bathy.csv')
+in.data    <- read.csv(infile, stringsAsFactors = FALSE)
+num.pts    <- nrow(in.data)
+lon        <- in.data$mlon
+lat        <- in.data$mlat
 
 out.data <- in.data
 
@@ -106,6 +126,7 @@ out.data$depth_lc <- apply(cbind(lon, lat), 1, function(i) {
     #   then get the value of the closest ocean ETOPO point
     #   that is still within the grid cell
     if (pred.cent >= 0 && any(pred.data < 0)) {
+      print("hi")
       ## Create sf objects of ETOPO points, grid cell centroid, and grid cell
       # ETOPO points
       depth.coords <- expand.grid(
@@ -160,7 +181,8 @@ out.data$depth_lc <- apply(cbind(lon, lat), 1, function(i) {
 out.data <- out.data %>% 
   mutate(depth = purrr::map_dbl(depth_lc, function(j) j[[1]]), 
          depth_sd = purrr::map_dbl(depth_lc, function(j) j[[2]])) %>% 
-  select(lat, lon180, lon360, area_km, depth, depth_sd)
+  # select(lat, lon180, lon360, area_km, depth, depth_sd) #grid
+  select(-depth_lc) #seg
 
 nc_close(nc.data)
 

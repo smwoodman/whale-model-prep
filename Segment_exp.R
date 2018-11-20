@@ -1,4 +1,4 @@
-x <- read.csv("../whale-model-prep_data/LgWhale_CCE_91_14_3km_Segs_BF0_6.csv")
+x <- read.csv("../whale-model-prep_data/Segments/LgWhale_CCE_91_14_3km_Segs_BF0_6.csv")
 
 range(x$mlon)
 range(x$mlat)

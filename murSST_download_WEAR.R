@@ -18,23 +18,18 @@
 
 ###############################################################################
 # Single nc file download. Testing
+
+### Download exp nc file
 lonmin <- -132
 lonmax <- -116
 latmin <- 29
 latmax <- 49
 coords.txt <- paste0("(", paste(lonmin, lonmax, latmin, latmax, sep = ")-("), ")")
 
-start.date <- as.Date("2005-01-01")
-end.date   <- as.Date("2005-01-15")
+start.date  <- as.Date("2005-01-01")
+end.date    <- as.Date("2005-01-01")
 
 days.gap <- 2
-
-file.name.out <- "exp3.nc"
-# file.name.out <- paste0(
-#   "mursst_", start.date, "_", end.date, "_", 
-#   days.gap, "day_", coords.txt, ".nc"
-# )
-
 
 string.date.loc <- paste0(
   "[(", 
@@ -42,74 +37,89 @@ string.date.loc <- paste0(
   latmin, "):1:(", latmax, ")][(", 
   lonmin, "):1:(", lonmax, ")]"
 )
-
+file.name.out <- "exp4.nc"
 d <- paste0(
   "http://coastwatch.pfeg.noaa.gov/erddap/griddap/jplMURSST41.nc?analysed_sst", 
-  string.date.loc, ",analysis_error", string.date.loc, ",mask", string.date.loc
+  string.date.loc
+  #, ",analysis_error", string.date.loc, ",mask", string.date.loc
 )
-
 download.file(
-  d, destfile = paste0("../whale-model-prep_data/mursst_nc/", file.name.out), 
+  d, destfile = paste0("../whale-model-prep_data/mursst_nc/exp/", file.name.out), 
   method = "auto", quiet = FALSE, mode = "wb", cacheOK = TRUE
 )
 
 
-###############################################################################
-# Exp
-
+# ### Open and examine exp nc file
+# 
 # library(ncdf4)
-# x <- nc_open("../whale-model-prep_data/mursst_nc/exp.nc")
-# y <- nc_open("../whale-model-prep_data/mursst_nc/exp2.nc")
+# x <- nc_open("../whale-model-prep_data/mursst_nc/exp/exp.nc")
+# y <- nc_open("../whale-model-prep_data/mursst_nc/exp/exp2.nc")
 # 
 # x.t <- ncvar_get(x, "time")
 # y.t <- ncvar_get(y, "time")
-# 
 # as.POSIXct(x.t, origin = "1970-01-01")
 # as.POSIXct(y.t, origin = "1970-01-01")
+# 
+# nc_close(x)
+# nc_close(y)
 
 
 ###############################################################################
+###############################################################################
 # Loop for downloading multiple nc files
+library(lubridate)
+library(ncdf4)
 
 lonmin <- -132
 lonmax <- -116
 latmin <- 29
 latmax <- 49
-coords.txt <- paste0("(", paste(lonmin, lonmax, latmin, latmax, sep = ")-("), ")")
-
-start.date <- as.Date("2005-01-01")
-end.date   <- as.Date("2005-01-15")
-
-start.data.mult <- seq(start.date)
-end.data.mult   <- seq(end.date)
-
-date.list <- list()
-
-days.gap <- 2
+coords.txt <- paste0(
+  "(", paste(lonmin, lonmax, latmin, latmax, sep = ")-("), ")"
+)
+days.gap <- 1
 
 
-
-for (i in date.list) {
-  string.date.loc <- paste0(
-    "[(", 
-    start.date, "T09:00:00Z):", days.gap, ":(", end.date, "T09:00:00Z)][(", 
-    latmin, "):1:(", latmax, ")][(", 
-    lonmin, "):1:(", lonmax, ")]"
-  )
+# Requires that yearly folders are already created
+# 3var: 751s for 36 files (2005:2008, months 1 to 3, days 1 to 3): ~21s per file
+# 1var: 338s for 36 files (2005:2008, months 1 to 3, days 1 to 3): ~9.4s per file
+system.time(for(i in 2005:2017) { #2005:2017
+  print(i)
+  start.date <- as.Date(paste0(i, "-01-01"))
   
-  url.name <- paste0(
-    "http://coastwatch.pfeg.noaa.gov/erddap/griddap/jplMURSST41.nc?analysed_sst", 
-    string.date.loc, ",analysis_error", string.date.loc, ",mask", string.date.loc
-  )
-  file.name.out <- paste0(
-    "mursst_", start.date, "_", end.date, "_",
-    days.gap, "day_", coords.txt, ".nc"
-  )
   
-  download.file(
-    url.name, destfile = paste0("../whale-model-prep_data/mursst_nc/", file.name.out), 
-    method = "auto", quiet = FALSE, mode = "wb", cacheOK = TRUE
-  )
-}
+  for(j in (1:12 - 1)) { #(1:12 - 1)
+    print(paste(i, "-", j + 1))
+    period.month <- period(j, "month")
+    curr.j <- start.date + period.month
+    
+    
+    for(k in (1:days_in_month(curr.j) - 1)) { #(1:days_in_month(curr.j) - 1)
+      curr.k <- curr.j %m+% period(k, "day")
+
+      # Download
+      string.date.loc <- paste0(
+        "[(", curr.k, "T09:00:00Z):", days.gap, ":(", curr.k, "T09:00:00Z)][(",
+        latmin, "):1:(", latmax, ")][(",
+        lonmin, "):1:(", lonmax, ")]"
+      )
+      url.name <- paste0(
+        "http://coastwatch.pfeg.noaa.gov/erddap/griddap/jplMURSST41.nc?analysed_sst",
+        string.date.loc
+        #, ",analysis_error", string.date.loc, ",mask", string.date.loc
+      )
+      file.name.out <- paste0(
+        "../whale-model-prep_data/mursst_nc/", year(curr.k), 
+        "/mursst_", curr.k, "_", coords.txt, ".nc"
+      )
+      download.file(
+        url.name, destfile = file.name.out,
+        method = "auto", quiet = TRUE, mode = "wb", cacheOK = TRUE
+      )
+      rm(curr.k, string.date.loc, url.name, file.name.out)
+      
+    }
+  }
+}); rm(i, j, k)
 
 ###############################################################################
