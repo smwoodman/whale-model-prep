@@ -27,9 +27,9 @@ latmax <- 49
 coords.txt <- paste0("(", paste(lonmin, lonmax, latmin, latmax, sep = ")-("), ")")
 
 start.date  <- as.Date("2005-01-01")
-end.date    <- as.Date("2005-01-01")
+end.date    <- as.Date("2005-01-02")
 
-days.gap <- 2
+days.gap <- 1
 
 string.date.loc <- paste0(
   "[(", 
@@ -83,7 +83,7 @@ days.gap <- 1
 # Requires that yearly folders are already created
 # 3var: 751s for 36 files (2005:2008, months 1 to 3, days 1 to 3): ~21s per file
 # 1var: 338s for 36 files (2005:2008, months 1 to 3, days 1 to 3): ~9.4s per file
-system.time(for(i in 2005:2017) { #2005:2017
+for(i in 2013:2017) { #2005:2017
   print(i)
   start.date <- as.Date(paste0(i, "-01-01"))
   
@@ -96,7 +96,7 @@ system.time(for(i in 2005:2017) { #2005:2017
     
     for(k in (1:days_in_month(curr.j) - 1)) { #(1:days_in_month(curr.j) - 1)
       curr.k <- curr.j %m+% period(k, "day")
-
+      
       # Download
       string.date.loc <- paste0(
         "[(", curr.k, "T09:00:00Z):", days.gap, ":(", curr.k, "T09:00:00Z)][(",
@@ -112,14 +112,16 @@ system.time(for(i in 2005:2017) { #2005:2017
         "../whale-model-prep_data/mursst_nc/", year(curr.k), 
         "/mursst_", curr.k, "_", coords.txt, ".nc"
       )
-      download.file(
-        url.name, destfile = file.name.out,
-        method = "auto", quiet = TRUE, mode = "wb", cacheOK = TRUE
-      )
+      if (!file.exists(file.name.out)) {
+        download.file(
+          url.name, destfile = file.name.out,
+          method = "auto", quiet = TRUE, mode = "wb", cacheOK = TRUE
+        )
+      }
       rm(curr.k, string.date.loc, url.name, file.name.out)
       
     }
   }
-}); rm(i, j, k)
+}; rm(i, j, k)
 
 ###############################################################################
