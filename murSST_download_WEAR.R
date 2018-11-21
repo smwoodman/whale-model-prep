@@ -83,7 +83,7 @@ days.gap <- 1
 # Requires that yearly folders are already created
 # 3var: 751s for 36 files (2005:2008, months 1 to 3, days 1 to 3): ~21s per file
 # 1var: 338s for 36 files (2005:2008, months 1 to 3, days 1 to 3): ~9.4s per file
-for(i in 2013:2017) { #2005:2017
+for(i in 2015:2017) { #2005:2017
   print(i)
   start.date <- as.Date(paste0(i, "-01-01"))
   
