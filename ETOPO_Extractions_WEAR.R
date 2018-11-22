@@ -34,17 +34,17 @@ library(sf)
 
 #----------------------------------------------------------
 ### For SMW grid
-etopo.path <- "../whale-model-prep_data/etopo180_N10-60_W150-100/"
-path       <- "../whale-model-prep_data/Outputs/"
-
-infile     <- paste0(path, 'Grid_Non-rectangle_3km.csv')
-outfile    <- paste0(path, 'Grid_Non-rectangle_3km_bathy.csv')
-in.data    <- read.csv(infile)
-num.pts    <- nrow(in.data)
-lon        <- in.data$lon180
-lat        <- in.data$lat
-
-out.data <- in.data
+# etopo.path <- "../whale-model-prep_data/etopo180_N10-60_W150-100/"
+# path       <- "../whale-model-prep_data/Outputs/"
+# 
+# infile     <- paste0(path, 'Grid_Non-rectangle_3km.csv')
+# outfile    <- paste0(path, 'Grid_Non-rectangle_3km_bathy.csv')
+# in.data    <- read.csv(infile)
+# num.pts    <- nrow(in.data)
+# lon        <- in.data$lon180
+# lat        <- in.data$lat
+# 
+# out.data <- in.data
 
 
 #----------------------------------------------------------

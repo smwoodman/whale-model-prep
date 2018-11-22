@@ -1,6 +1,12 @@
-# Code to generate urls for downloading murSST nc files for WEAR whale modeling,
+# Code to generate urls for downloading murSST nc files for WEAR whale models,
 #   and code to actually download files
-# By Sam Woodman
+# Needed large area (US west coast) and thus had to download one nc file
+#   per day every day for 2005-2017.
+#   Only downloaded analysed_sst data (not analysis_error or mark).
+#   Data stored at "J:\Sam_Woodman\mursst_nc" where "J:\" is "mmdisk". 
+#
+#
+# By Sam Woodman, November 2018
 
 ###############################################################################
 # NC FILES NEEDED lat/lon DIMENSIONS
