@@ -99,6 +99,7 @@ ETOPO.ncols <- length(ETOPO.lat)
 #   reflects that (i.e. rows correspond to lon and cols to lat of pred.data)
 out.data$depth_lc <- apply(cbind(lon, lat), 1, function(i) {
   if (anyNA(i)) {
+    warning("A longitude or latitude was NA")
     NA
     
   } else {

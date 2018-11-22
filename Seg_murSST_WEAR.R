@@ -11,7 +11,9 @@
 # By Sam Woodman
 
 ###############################################################################
+library(dplyr)
 library(ncdf4)
+library(purrr)
 
 # Paths to files
 nc.path <- "../whale-model-prep_data/mursst_nc/"
@@ -20,14 +22,31 @@ nc.path <- "../whale-model-prep_data/mursst_nc/"
 seg.path <- "../whale-model-prep_data/Segments/"
 
 ###############################################################################
-# Prep
-infile     <- paste0(seg.path, "LgWhale_CCE_91_14_3km_Segs_BF0_6.csv")
-outfile    <- paste0(seg.path, "WEAR_seg_mursst.csv")
-in.data    <- read.csv(infile)
-num.pts    <- nrow(in.data)
-lon        <- in.data$lon180
-lat        <- in.data$lat
+### Prep
+infile        <- paste0(seg.path, "LgWhale_CCE_91_14_3km_Segs_BF0_6.csv")
+outfile       <- paste0(seg.path, "WEAR_seg_mursst.csv")
+seg.data.orig <- read.csv(infile, stringsAsFactors = FALSE)
 
-out.data <- in.data
+seg.data <- seg.data.orig %>% 
+  select(mlon, mlat, year, month, day) %>% 
+  mutate(ymd = map())
+
+
+###############################################################################
+### For each segment point, open applicable nc file and get needed data
+temp <- apply(seg.data, 1, function(i) {
+  if (anyNA(i)) {
+    warning("A longitude or latitude was NA")
+    NA
+    
+  } else {
+    browser()
+    # names(i)
+    # [1] "mlon"  "mlat"  "year"  "month" "day"  
+    
+    # mursst_2005-01-01_(-132)-(-116)-(29)-(49)
+    paste0("mursst_", paste(i[3:5], collapse = "-"))
+  }
+})
 
 ###############################################################################
