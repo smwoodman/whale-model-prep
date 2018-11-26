@@ -60,6 +60,7 @@ nc_close(nc.temp); rm(nc.temp)
 ###############################################################################
 ### For each segment point, open applicable nc file and get needed data
 # 88 sec for segment file (13,923 points)
+# 95-100 sec when using for() loop
 seg.data.out$temp_nc <- c(
   rep(NA, (nrow(seg.data.out) - nrow(seg.data))), 
   apply(seg.data, 1, function(i) {
