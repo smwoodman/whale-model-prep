@@ -156,13 +156,13 @@ if (user=="KAF") {
 
 
 ### Read in segment data file and assign variable names 
-infile <- paste0(seg.path, "WEAR_seg_bathy.csv")
-# outfile <- paste0(seg.path, 'RFwhales2.csv')
+infile <- paste0(seg.path, "LgWhale_CCE_91_14_3km_Segs_BF0_6.csv")
+outfile <- paste0(seg.path, 'WEAR_seg_CCSRA.csv')
 
 seg.data <- read.table(infile, sep = ",", header = TRUE, stringsAsFactors = FALSE)
 
 segs <- seg.data %>% 
-  select(segnum, lon = mlon, lat = mlat, year, month, day, depth) %>% 
+  select(segnum, lon = mlon, lat = mlat, year, month, day) %>% 
   mutate(dt = as.POSIXct(paste(year, month, day, sep = "-"), "%Y-%m-%d", tz = 'UTC'))
 
 
@@ -193,6 +193,6 @@ segs <- rbind(segs2010, segs2011)
 
 
 ### Save data
-write.table(seg.out, outfile, sep = "," , col.names = TRUE,row.names = FALSE)
+write.table(segs, outfile, sep = "," , col.names = TRUE,row.names = FALSE)
 
 #-------------------------------------------------------------------------------------
