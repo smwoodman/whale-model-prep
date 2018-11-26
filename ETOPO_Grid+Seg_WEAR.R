@@ -128,7 +128,6 @@ out.data$depth_lc <- apply(cbind(lon, lat), 1, function(i) {
     #   then get the value of the closest ocean ETOPO point
     #   that is still within the grid cell
     if (pred.cent >= 0 && any(pred.data < 0)) {
-      print("hi")
       ## Create sf objects of ETOPO points, grid cell centroid, and grid cell
       # ETOPO points
       depth.coords <- expand.grid(
