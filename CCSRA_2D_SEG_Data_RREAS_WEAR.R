@@ -193,6 +193,6 @@ segs <- rbind(segs2010, segs2011)
 
 
 ### Save data
-write.table(segs, outfile, sep = "," , col.names = TRUE,row.names = FALSE)
+write.table(segs, outfile, sep = "," , col.names = TRUE, row.names = FALSE)
 
 #-------------------------------------------------------------------------------------
