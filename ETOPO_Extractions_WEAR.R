@@ -1,6 +1,7 @@
 #--------------------------------------------------------------------------------------
 # ETOPO_EXTRACTIONS.R 
 # Adapted for WEAR project by Sam Woodman Nov 2018
+# Code to extract ETOPO data for both grid and segment points
 #
 #--------------------------------------------------------------------------------------
 # Clear workspace 
