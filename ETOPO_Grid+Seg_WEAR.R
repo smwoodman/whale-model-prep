@@ -10,11 +10,8 @@ rm(list = ls())
 
 #-------------------------------SET UP FUNCTIONS---------------------------------------
 # Install (if needed) and then load packages
-list.of.packages <- c("ncdf4", "dplyr", "purrr", "sf")
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[, "Package"])]
-if(length(new.packages)) install.packages(new.packages) #install packages
-rm(list.of.packages, new.packages)
 
+# install.packages("ncdf4", "dplyr", "purrr", "sf")
 library(ncdf4)
 library(dplyr)
 library(purrr)
@@ -35,32 +32,32 @@ library(sf)
 
 #----------------------------------------------------------
 ### For SMW grid
-# etopo.path <- "../whale-model-prep_data/etopo180_N10-60_W150-100/"
-# path       <- "../whale-model-prep_data/Outputs/"
-# 
-# infile     <- paste0(path, 'Grid_Non-rectangle_3km.csv')
-# outfile    <- paste0(path, 'Grid_Non-rectangle_3km_bathy.csv')
-# in.data    <- read.csv(infile)
-# num.pts    <- nrow(in.data)
-# lon        <- in.data$lon180
-# lat        <- in.data$lat
-# 
-# out.data <- in.data
+etopo.path <- "../whale-model-prep_data/etopo180_N10-60_W150-100/"
+path       <- "../whale-model-prep_data/Grid/"
+
+infile     <- paste0(path, "Grid_Non-rectangle_3km_WEAR.csv")
+outfile    <- paste0(path, "Grid_Non-rectangle_3km_WEAR_bathy.csv")
+in.data    <- read.csv(infile)
+num.pts    <- nrow(in.data)
+lon        <- in.data$lon180
+lat        <- in.data$lat
+
+out.data <- in.data
 
 
 #----------------------------------------------------------
-### For SMW segments
-etopo.path <- "../whale-model-prep_data/etopo180_N10-60_W150-100/"
-path       <- "../whale-model-prep_data/Segments/"
-
-infile     <- paste0(path, 'LgWhale_CCE_91_14_3km_Segs_BF0_6.csv')
-outfile    <- paste0(path, 'WEAR_seg_bathy.csv')
-in.data    <- read.csv(infile, stringsAsFactors = FALSE)
-num.pts    <- nrow(in.data)
-lon        <- in.data$mlon
-lat        <- in.data$mlat
-
-out.data <- in.data
+# ### For SMW segments
+# etopo.path <- "../whale-model-prep_data/etopo180_N10-60_W150-100/"
+# path       <- "../whale-model-prep_data/Segments/"
+# 
+# infile  <- paste0(path, 'LgWhale_CCE_91_14_3km_Segs_BF0_6.csv')
+# outfile <- paste0(path, 'WEAR_seg_bathy.csv')
+# in.data <- read.csv(infile, stringsAsFactors = FALSE)
+# num.pts <- nrow(in.data)
+# lon     <- in.data$mlon
+# lat     <- in.data$mlat
+# 
+# out.data <- in.data
 
 
 ###############################################################################
@@ -71,15 +68,15 @@ out.data <- in.data
 
 #------------------------------------------------------------------------------
 ### Depth prep work
-nc.file <- paste0(etopo.path,'etopo180_N10-60_W150-100.nc')
+nc.file <- paste0(etopo.path, "etopo180_N10-60_W150-100.nc")
 nc.data <- nc_open(nc.file)
-ETOPO.lat   <- ncvar_get(nc.data, 'latitude')
 ETOPO.lon   <- ncvar_get(nc.data, 'longitude')
+ETOPO.lat   <- ncvar_get(nc.data, 'latitude')
 ETOPO.nrows <- length(ETOPO.lon)
 ETOPO.ncols <- length(ETOPO.lat)
 
 
-# # Write nc file depth matrix to csv file
+# # Write nc file depth matrix to csv file if desired
 # depth <- ncvar_get(
 #   nc.data, 'altitude', start = c(1, 1),
 #   count = c(ETOPO.nrows, ETOPO.ncols), verbose = FALSE
@@ -98,6 +95,10 @@ ETOPO.ncols <- length(ETOPO.lat)
 ### Create list-column with both depth and SD(depth) values
 # Sam note: nc file is indexed in dim order (X, Y, Z, T) and ncvar_get() output
 #   reflects that (i.e. rows correspond to lon and cols to lat of pred.data)
+
+# table(diff(lon))
+grid.rad.half <- 0.027 / 2 # Half of grid cell length/width
+
 out.data$depth_lc <- apply(cbind(lon, lat), 1, function(i) {
   if (anyNA(i)) {
     warning("A longitude or latitude was NA")
@@ -144,7 +145,7 @@ out.data$depth_lc <- apply(cbind(lon, lat), 1, function(i) {
       cent.sfc <- st_sfc(st_point(i), crs = 4326)
       
       # Grid cell (polygon)
-      j <- 0.0225 # Half of grid cell length/width
+      j <- grid.rad.half
       poly.sfc <- st_sfc(st_polygon(list(matrix(
         c(i[1] + j, i[1] - j, i[1] - j, i[1] + j, i[1] + j,
           i[2] + j, i[2] + j, i[2] - j, i[2] - j, i[2] + j),
@@ -171,8 +172,8 @@ out.data$depth_lc <- apply(cbind(lon, lat), 1, function(i) {
         pred.cent <- depth.all[cent.depth.min.name]
       }
     }
-    
-    list(pred.cent, sd(pred.data[pred.data < 0]))
+
+    list(pred.cent, sd(pred.data[pred.data < 0], na.rm = TRUE))
   }
 })
 
@@ -191,6 +192,8 @@ nc_close(nc.data)
 #------------------------------------------------------------------------------
 # Change depth and depth_sd for positive depth values (i.e. land) to NA
 # This is only needed for grids which have land
+# Sam note: For 3km grid, depth_sd has 85 more NA's than depth because 
+#   there was only 1 depth value < 0 for those 85
 
 land <- which(out.data$depth >= 0)
 
@@ -198,11 +201,5 @@ out.data$depth[land] <- NA
 out.data$depth_sd[land] <- NA
 
 write.table(out.data, outfile, sep = "," , col.names = TRUE, row.names = FALSE)
-
-
-# x <- read.csv("../whale-model-prep_data/Outputs/Grid_Non-rectangle_3km_bathy.csv")
-# y <- read.csv("../whale-model-prep_data/Outputs/Grid_Non-rectangle_3km_bathy_noextra.csv")
-# sum(is.na(x$depth)) #10954
-# sum(is.na(y$depth)) #11344
 
 ###############################################################################
