@@ -99,7 +99,7 @@ pixel <- .027         # 3km
 outfile <- paste0(
   "../whale-model-prep_data/Grid/", #Path to folder
   # paste0("Grid_Lat", latmin, "to", latmax, "_Lon", lonmin, "to", lonmax),
-  "Grid_Non-rectangle", #Uncomment either this line or above line
+  "Grid_Nonrectangle", #Uncomment either this line or above line
   "_3km_WEAR.csv" # "_Step", pixel, "withArea.csv"
 )
 

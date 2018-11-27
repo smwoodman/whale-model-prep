@@ -11,7 +11,9 @@
 # By Sam Woodman
 
 ###############################################################################
+# install.packages(c("dplyr", "lubridate", "ncdf4", "purrr"))
 library(dplyr)
+library(lubridate)
 library(ncdf4)
 library(purrr)
 
@@ -19,44 +21,44 @@ library(purrr)
 # nc.path <- "../whale-model-prep_data/mursst_nc/"
 nc.path <- "J:/Sam_Woodman/mursst_nc/" # J is mmdisk on SMW computer
 
-# seg.path <- "../whale-model-prep_data/Segments/"
-# 
-# ###############################################################################
-# ### Prep
-# infile        <- paste0(seg.path, "LgWhale_CCE_91_14_3km_Segs_BF0_6.csv")
-# outfile       <- paste0(seg.path, "WEAR_seg_mursst.csv")
-# seg.data.orig <- read.csv(infile, stringsAsFactors = FALSE)
-# seg.data.out  <- seg.data.orig
-# varname <- 'analysed_sst' 
-# 
-# 
-# # Number of rows in each direction from center point for which to get data
-# pixel.radius  <- 12 
-# 
-# 
-# # Generate filenames of mursst nc files
-# temp <- seg.data.orig %>% 
-#   mutate(month_chr = formatC(month, width = 2, format = "d", flag = "0"), 
-#          day_chr = formatC(day, width = 2, format = "d", flag = "0")) %>% 
-#   select(year, month_chr, day_chr) %>% 
-#   mutate(file_nc = pmap_chr(., paste, sep = "-")) %>% 
-#   mutate(file_nc = paste0(nc.path, year, "/mursst_", file_nc, "_(-132)-(-116)-(29)-(49).nc"))
-# 
-# seg.data <- seg.data.orig %>% 
-#   mutate(file_nc = temp$file_nc) %>% 
-#   filter(year >= 2005) %>% 
-#   select(mlon, mlat, year, month, day, file_nc)
-# rm(temp)
-# 
-# 
-# # Get nc file lat/lon info - this will be the same across mursst nc files
-# nc.temp  <- nc_open(seg.data$file_nc[1])
-# nc.lon   <- ncvar_get(nc.temp, "longitude")
-# nc.lat   <- ncvar_get(nc.temp, "latitude")
-# nc.nrows <- length(nc.lon)
-# nc.ncols <- length(nc.lat)
-# nc_close(nc.temp); rm(nc.temp)
-# 
+path <- "../whale-model-prep_data/Grid/"
+
+###############################################################################
+### Prep
+infile        <- paste0(path, "Grid_Nonrectangle_3km_WEAR.csv")
+outfile       <- paste0(path, "Grid_Nonrectangle_3km_WEAR_mursst.csv")
+data.orig <- read.csv(infile, stringsAsFactors = FALSE)
+data.out  <- data.orig
+varname <- 'analysed_sst'
+
+# Number of rows in each direction from center point for which to get data
+pixel.radius  <- 12
+
+# Generate dates for which to get data and corresponding filename
+grid.dates <- seq(as.Date("2005-01-01"), as.Date("2017-12-31"), by = 2)
+grid.dates.df <- data.frame(
+  grid_dates = grid.dates, year = year(grid.dates), 
+  month = month(grid.dates), day = day(grid.dates)
+)
+
+# Generate filenames of mursst nc files
+temp <- grid.dates.df %>%
+  mutate(month_chr = formatC(month, width = 2, format = "d", flag = "0"),
+         day_chr = formatC(day, width = 2, format = "d", flag = "0")) %>%
+  select(year, month_chr, day_chr) %>%
+  mutate(file_nc = pmap_chr(., paste, sep = "-")) %>%
+  mutate(file_nc = paste0(nc.path, year, "/mursst_", file_nc, "_(-132)-(-116)-(29)-(49).nc"))
+
+dates.files.nc <- temp$file_nc; rm(grid.dates, grid.dates.df, temp)
+
+# Get nc file lat/lon info - this will be the same across mursst nc files
+nc.temp  <- nc_open(dates.files.nc[1])
+nc.lon   <- ncvar_get(nc.temp, "longitude")
+nc.lat   <- ncvar_get(nc.temp, "latitude")
+nc.nrows <- length(nc.lon)
+nc.ncols <- length(nc.lat)
+nc_close(nc.temp); rm(nc.temp)
+
 # ###############################################################################
 # ### For each segment point, open applicable nc file and get needed data
 # # 88 sec for segment file (13,923 points)

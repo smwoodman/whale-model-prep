@@ -65,8 +65,8 @@ if (user=="KAF") {
 } else if (user == "SMW") {
   nc.path31 <- '../whale-model-prep_data/CCSRA nc files/CCSRA_wcra31_daily_2D_Jacox/' 
   nc.pathNRT <- '../whale-model-prep_data/CCSRA nc files/CCSRA_NRT2011-2017_daily_2D_Jacox/'    
-  grid.path <- '../whale-model-prep_data/Outputs/'
-  out.path <- '../whale-model-prep_data/Outputs/'
+  grid.path <- '../whale-model-prep_data/Grid/'
+  out.path <- '../whale-model-prep_data/Grid/'
 }
 #
 # 
@@ -90,9 +90,9 @@ write.csv(grid.dates,"Grid.dates.csv")  # save dates for reference
 #  
 # Open grid pixel file and initialize variables
 #  
-gridfile <- 'Grid_Non-rectangle_3km.csv'
+gridfile <- 'Grid_Nonrectangle_3km_WEAR.csv'
 grid.pixelfile <- paste(grid.path,gridfile,sep="")
-grid.pixels    <- read.csv(grid.pixelfile, header=TRUE)[,c(2,4)]
+grid.pixels    <- read.csv(grid.pixelfile, header = TRUE)[, c(1, 2)]
 names(grid.pixels) <- c('lat','lon')
 
 num.pixels     <- nrow(grid.pixels)

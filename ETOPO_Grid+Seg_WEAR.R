@@ -35,8 +35,8 @@ library(sf)
 etopo.path <- "../whale-model-prep_data/etopo180_N10-60_W150-100/"
 path       <- "../whale-model-prep_data/Grid/"
 
-infile     <- paste0(path, "Grid_Non-rectangle_3km_WEAR.csv")
-outfile    <- paste0(path, "Grid_Non-rectangle_3km_WEAR_bathy.csv")
+infile     <- paste0(path, "Grid_Nonrectangle_3km_WEAR.csv")
+outfile    <- paste0(path, "Grid_Nonrectangle_3km_WEAR_bathy.csv")
 in.data    <- read.csv(infile)
 num.pts    <- nrow(in.data)
 lon        <- in.data$lon180
