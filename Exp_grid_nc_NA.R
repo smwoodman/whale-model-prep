@@ -1,15 +1,33 @@
+# Code for exploring if the CCSRA nc file indices that have NAs have NAs for
+# all variables and dates.
+# Result: yes they do
+
+
 ###############################################################################
 x1 <- read.csv("../whale-model-prep_data/Grid/Grid_CCSRA_pre/WEAR_3km_2005-01-01.csv")
-x2 <- read.csv("../whale-model-prep_data/Grid/Grid_CCSRA_pre/WEAR_3km_2005-01-03.csv")
 
+# write.csv(
+#   dplyr::mutate(x1, na_flag = as.numeric(is.na(sst.mean))), 
+#   file = "../whale-model-prep_data/Grid/Grid_CCSRA_na_WEAR.csv"
+# )
+
+# y <- read.csv("../whale-model-prep_data/Grid/Grid_Nonrectangle_3km_WEAR_bathy.csv")
+# 
+# sum(!(which(is.na(x1$sst.mean)) %in% which(is.na(y$depth))))
+# 
+# nrow(x1) #85,869
+# sum(is.na(x1$sst.mean)) #32,284
+# sum(is.na(x1$sst.mean)) - sum(is.na(x1$sst.SD)) # 2,772; same for ssh and ild
+# 
 # x1.sst <- which(is.na(x1$sst.mean))
 # x1.ssh <- which(is.na(x1$ssh.mean))
 # x1.ild <- which(is.na(x1$ild.mean))
 # 
 # identical(x1.sst, x1.ssh)
 # identical(x1.sst, x1.ild)
-# 
-# 
+
+
+# x2 <- read.csv("../whale-model-prep_data/Grid/Grid_CCSRA_pre/WEAR_3km_2005-01-03.csv")
 # x2.sst <- which(is.na(x2$sst.mean))
 # x2.ssh <- which(is.na(x2$ssh.mean))
 # x2.ild <- which(is.na(x2$ild.mean))
@@ -23,7 +41,7 @@ x2 <- read.csv("../whale-model-prep_data/Grid/Grid_CCSRA_pre/WEAR_3km_2005-01-03
 # For all lon/lat coords in rows x1.sst, extract values for grid.dates from applicable nc files
 
 ### Load and prep
-load("../whale-model-prep_data/Grid/Grid_CCSRA_idx.RDATA")
+load("../whale-model-prep_data/Grid/Grid_CCSRA_idx.RDATA") #Created in "CCSRA_2D_Grid_WEAR.R"
 x1.na <- x1 %>% 
   mutate(ccsra.lon.idx = z.lon.idx, ccsra.lat.idx = z.lat.idx, 
          ccsra.idx = paste(z.lon.idx, z.lat.idx, sep = "-")) %>% 
@@ -35,17 +53,17 @@ i <- x1.na$ccsra.lon.idx[!duplicated(x1.na$ccsra.idx)] #z.lon.idx.unique
 j <- x1.na$ccsra.lat.idx[!duplicated(x1.na$ccsra.idx)] #z.lon.idx.unique
 
 # Load nc files and get lengths of their time dimensions
-nc.ccsra1.sst <- nc_open("../whale-model-prep_data/CCSRA nc files/CCSRA_wcra31_daily_2D_Jacox/wcra31_sst_daily_1991_2010.nc")
-nc.ccsra2.sst <- nc_open("../whale-model-prep_data/CCSRA nc files/CCSRA_NRT2011-2017_daily_2D_Jacox/wcnrt_sst_daily_20110102_20170419.nc")
-nc.ccsra3.sst <- nc_open("../whale-model-prep_data/CCSRA nc files/CCSRA_NRT2011-2017_daily_2D_Jacox/wcnrt_sst_daily_20170420_20180430.nc")
+nc.ccsra1.sst <- nc_open("../whale-model-prep_data/CCSRA_nc/CCSRA_wcra31_daily_2D_Jacox/wcra31_sst_daily_1991_2010.nc")
+nc.ccsra2.sst <- nc_open("../whale-model-prep_data/CCSRA_nc/CCSRA_NRT2011-2017_daily_2D_Jacox/wcnrt_sst_daily_20110102_20170419.nc")
+nc.ccsra3.sst <- nc_open("../whale-model-prep_data/CCSRA_nc/CCSRA_NRT2011-2017_daily_2D_Jacox/wcnrt_sst_daily_20170420_20180430.nc")
 
-nc.ccsra1.ssh <- nc_open("../whale-model-prep_data/CCSRA nc files/CCSRA_wcra31_daily_2D_Jacox/wcra31_ssh_daily_1991_2010.nc")
-nc.ccsra2.ssh <- nc_open("../whale-model-prep_data/CCSRA nc files/CCSRA_NRT2011-2017_daily_2D_Jacox/wcnrt_ssh_daily_20110102_20170419.nc")
-nc.ccsra3.ssh <- nc_open("../whale-model-prep_data/CCSRA nc files/CCSRA_NRT2011-2017_daily_2D_Jacox/wcnrt_ssh_daily_20170420_20180430.nc")
+nc.ccsra1.ssh <- nc_open("../whale-model-prep_data/CCSRA_nc/CCSRA_wcra31_daily_2D_Jacox/wcra31_ssh_daily_1991_2010.nc")
+nc.ccsra2.ssh <- nc_open("../whale-model-prep_data/CCSRA_nc/CCSRA_NRT2011-2017_daily_2D_Jacox/wcnrt_ssh_daily_20110102_20170419.nc")
+nc.ccsra3.ssh <- nc_open("../whale-model-prep_data/CCSRA_nc/CCSRA_NRT2011-2017_daily_2D_Jacox/wcnrt_ssh_daily_20170420_20180430.nc")
 
-nc.ccsra1.ild <- nc_open("../whale-model-prep_data/CCSRA nc files/CCSRA_wcra31_daily_2D_Jacox/wcra31_ild_daily_1991_2010.nc")
-nc.ccsra2.ild <- nc_open("../whale-model-prep_data/CCSRA nc files/CCSRA_NRT2011-2017_daily_2D_Jacox/wcnrt_ild_daily_20110102_20170419.nc")
-nc.ccsra3.ild <- nc_open("../whale-model-prep_data/CCSRA nc files/CCSRA_NRT2011-2017_daily_2D_Jacox/wcnrt_ild_daily_20170420_20180430.nc")
+nc.ccsra1.ild <- nc_open("../whale-model-prep_data/CCSRA_nc/CCSRA_wcra31_daily_2D_Jacox/wcra31_ild_daily_1991_2010.nc")
+nc.ccsra2.ild <- nc_open("../whale-model-prep_data/CCSRA_nc/CCSRA_NRT2011-2017_daily_2D_Jacox/wcnrt_ild_daily_20110102_20170419.nc")
+nc.ccsra3.ild <- nc_open("../whale-model-prep_data/CCSRA_nc/CCSRA_NRT2011-2017_daily_2D_Jacox/wcnrt_ild_daily_20170420_20180430.nc")
 
 nc.ccsra1.time <- length(ncvar_get(nc.ccsra1.sst, "year"))
 nc.ccsra2.time <- length(ncvar_get(nc.ccsra2.sst, "year"))
@@ -98,3 +116,27 @@ nc_close(nc.ccsra3.ssh)
 nc_close(nc.ccsra1.ild)
 nc_close(nc.ccsra2.ild)
 nc_close(nc.ccsra3.ild)
+
+
+###############################################################################
+# Export grid as a shapefile with a column indicating NA's
+library(sf)
+x1 <- read.csv("../whale-model-prep_data/Grid/Grid_CCSRA_pre/WEAR_3km_2005-01-01.csv")
+x1.shp <- x1 %>% 
+   st_sf(geometry = eSDM::pts_to_sfc_centroids(x1[, c(2, 1)], 0.027 / 2, 4326), crs = 4326) %>% 
+  dplyr::mutate(na_flag = as.numeric(is.na(sst.mean)))
+plot(x1.shp["na_flag"], axes = TRUE, border = NA)
+
+st_write(x1.shp, "../whale-model-prep_data/shapefiles/grid_ccsra_naflag.shp")
+
+
+###############################################################################
+# Export CCSRA nc file point locations to shapefile
+nc.data <- nc_open("../whale-model-prep_data/CCSRA_nc/CCSRA_wcra31_daily_2D_Jacox/wcra31_sst_daily_1991_2010.nc")
+x <- ncvar_get(nc.data, "lon")[, 1]
+y <- ncvar_get(nc.data, "lat")[1, ]
+xy <- data.frame(expand.grid(x, y))
+xy.sfc <- st_geometry(st_as_sf(xy, coords = c(1, 2), crs = 4326))
+st_write(xy.sfc, "../whale-model-prep_data/shapefiles/nc_points_sfc.shp")
+
+###############################################################################
