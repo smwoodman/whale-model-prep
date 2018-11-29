@@ -5,7 +5,8 @@
 # Extract data from nc file for a grid for a given time and given variable
 #   nc.data... vars are passed so they don't have to be calculated each time???
 nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols, 
-                       time.idx, var.name, calib, sd.radius) {
+                       time.idx, var.name, calib, sd.radius, smartcheck, 
+                       grid.rad.half) {
   ### Inputs
   # grid.df: data frame with lon and lat coords of grid cell centroids;
   #   MUST have columns with names 'lon' and 'lat'
@@ -20,6 +21,7 @@ nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
   # sd.rad: number of pixels to go in each direction from center nc file point
   #   when calculating SD. Can be a vector for calculating multiple SD's 
   #   (e.g. mursst)
+  # 
   
   
   grid.df$pred_lc <- apply(grid.df[, c("lon", "lat")], 1, function(i) {
@@ -39,9 +41,6 @@ nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
       # Extract pixels surrounding lat/lon point for the grid date
       #   Surrouding pixels have radius sd.radius
       #   Get center pixel value as mean and calculate SD.space from surrounding pixels
-      # A few print statements for checking:
-      #   print(paste0('Extracting ',Predictors[p],' for: '))
-      #   print(paste(ROMSlat[c],ROMSlon[r],ROMS.ymd))
       pred.data <- ncvar_get(
         nc.data, var.name, start = c(row1, col1, time.idx),
         count = c(numrows, numcols, 1), verbose = FALSE
@@ -49,6 +48,22 @@ nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
       pred.data <- pred.data + calib
       
       idx.cent <- c(1 + (r.lon - row1), 1 + (c.lat - col1))
+      pred.cent <- pred.data[idx.cent[1], idx.cent[2]]
+      
+      if (smartcheck) {
+        stopifnot(exists("grid.rad.half"))
+        # If the center pixel value is NA but at least one of the 
+        #   surrounding nc file points are non-NaN, then get the value of 
+        #   the closest valid nc file point that is still within the grid cell
+        # Note is.na() catches NaN's
+        if (is.na(pred.cent) & any(!is.na(pred.data))) {
+          pred.cent <- nc_extract_smartcheck(
+            nc.lon[row1:(row1 + numrows - 1)], 
+            nc.lat[col1:(col1 + numcols - 1)], 
+            pred.data, pred.cent, i, grid.rad.half, 1
+          )
+        }
+      }
       
       pred.data.sd <- lapply(sd.radius, function(j) {
         d <- list(
@@ -58,7 +73,7 @@ nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
         sd(pred.data[d[[1]], d[[2]]], na.rm = TRUE)
       })
       
-      c(pred.data[idx.cent[1], idx.cent[2]], as.list(pred.data.sd))
+      c(pred.cent, as.list(pred.data.sd))
     }
   })
   
