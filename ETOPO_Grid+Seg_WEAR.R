@@ -7,6 +7,7 @@
 # Clear workspace 
 
 rm(list = ls())
+source("Funcs_WEAR.R")
 
 #-------------------------------SET UP FUNCTIONS---------------------------------------
 # Install (if needed) and then load packages
@@ -96,7 +97,7 @@ ETOPO.ncols <- length(ETOPO.lat)
 # Sam note: nc file is indexed in dim order (X, Y, Z, T) and ncvar_get() output
 #   reflects that (i.e. rows correspond to lon and cols to lat of pred.data)
 
-# table(diff(lon))
+# table(diff(lon)); table(diff(lat))
 grid.rad.half <- 0.027 / 2 # Half of grid cell length/width
 
 out.data$depth_lc <- apply(cbind(lon, lat), 1, function(i) {
@@ -106,8 +107,9 @@ out.data$depth_lc <- apply(cbind(lon, lat), 1, function(i) {
     
   } else {
     # Get ETOPO row and column number of ETOPO point closest to grid centroid
-    # This assumes ETOPO is finer-scale than the grid and spans entire grid
-    r.lon <- which.min(abs(ETOPO.lon - i[1]))
+    #   This assumes ETOPO is finer-scale than the grid and spans entire grid
+    #   Note that which.min only returns index of the first, closest nc coord
+    r.lon <- which.min(abs(ETOPO.lon - i[1])) 
     c.lat <- which.min(abs(ETOPO.lat - i[2]))
     
     # nrows and ncols are used if we are at the edge of the ETOPO grid
@@ -124,55 +126,19 @@ out.data$depth_lc <- apply(cbind(lon, lat), 1, function(i) {
     )
     pred.cent <- pred.data[1 + (r.lon - row1), 1 + (c.lat - col1)][1]
     
-    # If the centroid is closest to a land ETOPO point (>=0) but 
-    #   at least one of the 9 surrounding ETOPO points are ocean (<0), 
+    #------------------------------------------------------
+    # If the centroid is closest to a land ETOPO point (>= 0) but 
+    #   at least one of the 9 surrounding ETOPO points are ocean (< 0), 
     #   then get the value of the closest ocean ETOPO point
     #   that is still within the grid cell
     if (pred.cent >= 0 && any(pred.data < 0)) {
-      ## Create sf objects of ETOPO points, grid cell centroid, and grid cell
-      # ETOPO points
-      depth.coords <- expand.grid(
-        as.numeric(ETOPO.lon[row1:(row1 + numrows - 1)]), 
-        as.numeric(ETOPO.lat[col1:(col1 + numcols - 1)])
+      pred.cent <- nc_extract_smartcheck(
+        ETOPO.lon[row1:(row1 + numrows - 1)], 
+        ETOPO.lat[col1:(col1 + numcols - 1)], 
+        pred.data, pred.cent, i, grid.rad.half, 2
       )
-      depth.all <- as.vector(pred.data)
-      
-      depth.sf <- depth.coords %>% 
-        mutate(depth = depth.all) %>%  #as.vector() combines by column
-        st_as_sf(coords = c(1, 2), crs = 4326)
-      
-      # Grid cell centroid
-      cent.sfc <- st_sfc(st_point(i), crs = 4326)
-      
-      # Grid cell (polygon)
-      j <- grid.rad.half
-      poly.sfc <- st_sfc(st_polygon(list(matrix(
-        c(i[1] + j, i[1] - j, i[1] - j, i[1] + j, i[1] + j,
-          i[2] + j, i[2] + j, i[2] - j, i[2] - j, i[2] + j),
-        ncol = 2
-      ))), crs = 4326); rm(j)
-      
-      ## Determine which of the points that meet the depth (negative) and 
-      ##   polygon (within grid cell) requirements
-      poly.depth.int <- suppressMessages(st_intersects(poly.sfc, depth.sf)[[1]])
-      depth.which <- which(
-        (1:(numcols * numrows) %in% poly.depth.int) & (depth.all < 0)
-      )
-      
-      if (length(depth.which) > 0) {
-        ## Which of those points is closest to the centroid
-        cent.depth.dist <- as.numeric(st_distance(cent.sfc, depth.sf))
-        names(cent.depth.dist) <- 1:length(depth.all)
-        
-        cent.depth.dist2 <- cent.depth.dist[depth.which]
-        cent.depth.min.name <- as.numeric(
-          names(cent.depth.dist2)[which.min(cent.depth.dist2)]
-        )
-        
-        pred.cent <- depth.all[cent.depth.min.name]
-      }
     }
-
+    
     list(pred.cent, sd(pred.data[pred.data < 0], na.rm = TRUE))
   }
 })
@@ -183,7 +149,6 @@ out.data$depth_lc <- apply(cbind(lon, lat), 1, function(i) {
 out.data <- out.data %>% 
   mutate(depth = purrr::map_dbl(depth_lc, function(j) j[[1]]), 
          depth_sd = purrr::map_dbl(depth_lc, function(j) j[[2]])) %>% 
-  # select(lat, lon180, lon360, area_km, depth, depth_sd) #grid
   select(-depth_lc) #seg
 
 nc_close(nc.data)

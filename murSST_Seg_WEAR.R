@@ -75,8 +75,8 @@ seg.data.out$temp_nc <- c(
       nc.data  <- nc_open(i["file_nc"])
       
       lonlat <- c(as.numeric(c(i["mlon"], i["mlat"])))
-      r.lon <- which.min(abs(nc.lon - lonlat[1]))
-      c.lat <- which.min(abs(nc.lat - lonlat[2]))
+      r.lon <- which.min(abs(nc.lon - lonlat[1])) #which.min selects first element by default
+      c.lat <- which.min(abs(nc.lat - lonlat[2])) #which.min selects first element by default
       
       # nrows and ncols are used if we are at the edge of the nc file grid
       row1    <- max(r.lon - pixel.radius, 1)
@@ -99,8 +99,8 @@ seg.data.out$temp_nc <- c(
       
       idx.cent <- c(1 + (r.lon - row1), 1 + (c.lat - col1))
       idx.04 <- list(
-        max(idx.cent[1] - 4, 1):min(idx.cent[1] + 4, nc.nrows), 
-        max(idx.cent[2] - 4, 1):min(idx.cent[2] + 4, nc.ncols)
+        max(idx.cent[1] - 4, 1):min(idx.cent[1] + 4, numrows), 
+        max(idx.cent[2] - 4, 1):min(idx.cent[2] + 4, numcols)
       )
       
       if (is.na(pred.data[idx.cent[1], idx.cent[2]][1])) {
