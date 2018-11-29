@@ -150,8 +150,8 @@ if (user=="KAF") {
   
 } else { #"SMW"
   seg.path <- "../whale-model-prep_data/Segments/"
-  nc.path31 <- "../whale-model-prep_data/CCSRA nc files/CCSRA_wcra31_daily_2D_Jacox/"
-  nc.pathNRT <- "../whale-model-prep_data/CCSRA nc files/CCSRA_NRT2011-2017_daily_2D_Jacox/"
+  nc.path31 <- "../whale-model-prep_data/CCSRA_nc/CCSRA_wcra31_daily_2D_Jacox/"
+  nc.pathNRT <- "../whale-model-prep_data/CCSRA_nc/CCSRA_NRT2011-2017_daily_2D_Jacox/"
 }
 
 
