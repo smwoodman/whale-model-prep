@@ -35,11 +35,12 @@ source("Funcs_WEAR.R")
 # }
 
 ### Run install.packages() below when running this code for the first time
-# install.packages("ncdf4", "dplyr", "purrr", "lubridate")
+# install.packages("ncdf4", "dplyr", "purrr", "lubridate", "sf")
 library(ncdf4)
 library(dplyr)
 library(purrr)
 library(lubridate)
+library(sf)
 
 #-------------------------------END OF FUNCTIONS---------------------------------------
 #
@@ -62,7 +63,7 @@ library(lubridate)
 #
 user <- "SMW"
 
-if (user=="KAF") {  
+if (user == "KAF") {  
   grid.path <- 'C:/KAF/PROJECTS/SERDP-CCmodels/CCE1991-2014/'
   nc.path31 <- 'C:/KAF/PROJECTS/SERDP-CCmodels/CCE1991-2014/wcra31_daily/' 
   nc.pathNRT <- 'C:/KAF/PROJECTS/SERDP-CCmodels/CCE1991-2014/wcnrt_daily/'    # SMW note: probably will have to change
@@ -117,6 +118,7 @@ grid.rad.half <- 0.027 / 2
 nc.file.date <- as.Date("2017-04-20")
 
 
+#----------------------------------------------------------
 # # SMW testing for "Exp_grid_nc_NA.R"
 # # For nc_extract(): z.lon.idx <<- c(z.lon.idx, r.lon); z.lat.idx <<- c(z.lat.idx, c.lat)
 # z.lon.idx <- c()
@@ -124,6 +126,12 @@ nc.file.date <- as.Date("2017-04-20")
 # save(z.lon.idx, z.lat.idx, file = "../whale-model-prep_data/Grid/Grid_CCSRA_idx.RDATA")
 
 
+#----------------------------------------------------------
+temp <- read.csv("../whale-model-prep_data/Grid/Grid_CCSRA_na_WEAR.csv")
+ccsra.na.idx <- as.logical(temp$na_flag); rm(temp) #Is TRUE if value is NA
+
+
+#----------------------------------------------------------
 t1 <- Sys.time()
 # for() loops take 2.3 minutes per var for one day
 #   using nc_extract takes ~85s
@@ -131,10 +139,14 @@ t1 <- Sys.time()
 #   using nc_extract() takes 8.566133 mins
 
 
+#----------------------------------------------------------
 # Loop through each daily grid file to be created 
-#   To run in smaller batched, specify start and end of grid
+#   To run in smaller batches, specify start and end of grid
+# grid.dates[1100]: "2011-01-08"
+# grid.dates[2250]: "2017-04-26"
 startgrid <- 1
-endgrid   <- 1 #2374 for WEAR
+endgrid   <- 3 #2374 for WEAR
+# z <- 0 #z is used in nc_extract()
 for(g in startgrid:endgrid) {
   ### Get year, month, day details for this grid file
   grid.data <- grid.pixels
@@ -200,7 +212,10 @@ for(g in startgrid:endgrid) {
       grid.data <- nc_extract(
         grid.data, nc.data, ROMSlon, ROMSlat, ROMSnrows, ROMSncols,
         day.index, var.name = p, calib = calib.val, sd.radius = 1, 
-        smartcheck = FALSE, grid.rad.half = grid.rad.half
+        smartcheck = TRUE, grid.rad.half = grid.rad.half, 
+        na.idx = ccsra.na.idx, 
+        s.invalid.type.flag = 1, 
+        s.within.poly.check = FALSE
       )
     }
     
@@ -208,7 +223,7 @@ for(g in startgrid:endgrid) {
     
   } # p loop (Predictors) 
   
-  grid.datafile <- paste0(out.path, 'WEAR_3km_', grid.ymd, '.csv')
+  grid.datafile <- paste0(out.path, 'WEAR_CCSRA_3km_', grid.ymd, '.csv')
   write.table(grid.data, grid.datafile, sep = "," , col.names = TRUE, row.names = FALSE)
   rm(grid.data, grid.datafile)
   

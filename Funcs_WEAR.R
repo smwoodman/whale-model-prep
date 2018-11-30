@@ -3,10 +3,10 @@
 
 ###############################################################################
 # Extract data from nc file for a grid for a given time and given variable
-#   nc.data... vars are passed so they don't have to be calculated each time???
 nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols, 
                        time.idx, var.name, calib, sd.radius, smartcheck, 
-                       grid.rad.half) {
+                       grid.rad.half, na.idx = NULL, 
+                       s.invalid.type.flag, s.within.poly.check) {
   ### Inputs
   # grid.df: data frame with lon and lat coords of grid cell centroids;
   #   MUST have columns with names 'lon' and 'lat'
@@ -21,12 +21,23 @@ nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
   # sd.rad: number of pixels to go in each direction from center nc file point
   #   when calculating SD. Can be a vector for calculating multiple SD's 
   #   (e.g. mursst)
-  # 
+  # smartcheck: logical flag for whether or not to use nc_extract_smartcheck()
+  # grid.rad.half: half of grid cell length; passed to nc_extract_smartcheck()
+  # na.idx: indices of rows in grid.df where the extracted value will be NA
+  # s.invalid.type.flag: passed to invalid.type.flag of nc_extract_smartcheck() 
+  # s.within.poly.check: passed to within.poly.check of nc_extract_smartcheck() 
   
   
-  grid.df$pred_lc <- apply(grid.df[, c("lon", "lat")], 1, function(i) {
+  grid.df.xy <- grid.df[, c("lon", "lat")]
+  
+  if (!is.null(na.idx)) {
+    stopifnot(length(na.idx) == nrow(grid.df))
+    grid.df.xy[na.idx, ] <- NA
+  }
+  
+  grid.df$pred_lc <- apply(grid.df.xy, 1, function(i) {
     if (anyNA(i)) {
-      NA
+      list(NA, NA)
       
     } else {
       r.lon <- which.min(abs(nc.lon - i[1]))
@@ -47,24 +58,31 @@ nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
       )
       pred.data <- pred.data + calib
       
+      # Determine the index of the center pixel
       idx.cent <- c(1 + (r.lon - row1), 1 + (c.lat - col1))
       pred.cent <- pred.data[idx.cent[1], idx.cent[2]]
       
+      # Perform smartcheck if desired
       if (smartcheck) {
         stopifnot(exists("grid.rad.half"))
         # If the center pixel value is NA but at least one of the 
         #   surrounding nc file points are non-NaN, then get the value of 
         #   the closest valid nc file point that is still within the grid cell
-        # Note is.na() catches NaN's
+        # Note that is.na() catches NaN's
         if (is.na(pred.cent) & any(!is.na(pred.data))) {
           pred.cent <- nc_extract_smartcheck(
-            nc.lon[row1:(row1 + numrows - 1)], 
-            nc.lat[col1:(col1 + numcols - 1)], 
-            pred.data, pred.cent, i, grid.rad.half, 1
+            lon = nc.lon[row1:(row1 + numrows - 1)], 
+            lat = nc.lat[col1:(col1 + numcols - 1)], 
+            pred.data, pred.cent, pt.grid = i, grid.rad.half, 
+            invalid.type.flag = s.invalid.type.flag, 
+            within.poly.check = s.within.poly.check
           )
         }
       }
       
+      # if (is.na(pred.cent) & any(!is.na(pred.data))) z <<- z + 1
+      
+      # Calculate desired standrad deviation(s)
       pred.data.sd <- lapply(sd.radius, function(j) {
         d <- list(
           max(idx.cent[1] - j, 1):min(idx.cent[1] + j, numrows), 
@@ -77,6 +95,7 @@ nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
     }
   })
   
+  # Process list-column reutrned by apply()
   if (identical(sd.radius, 1)) {
     names.d <- c(paste0(var.name, ".mean"), paste0(var.name, ".SD"))
     grid.df %>% 
@@ -92,12 +111,12 @@ nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
 }
 
 
-
 ###############################################################################
-# If current variable value is NA (i.e. positive for depth) then look around
-#   for closest valid value within the grid cell
+# If current variable value is invalid (i.e. NA or positive for depth) 
+#   then look around for closest valid value, maybe within the grid cell
 nc_extract_smartcheck <- function(lon, lat, pred.data, pred.cent, pt.grid,
-                                  grid.rad.half, na.flag) {
+                                  grid.rad.half, invalid.type.flag, 
+                                  within.poly.check = TRUE) {
   ### Inputs
   # lon: vector of longitudes for matrix, sorted from smallest to largest
   # lat: vector of latitudes for matrix, sorted from smallest to largest
@@ -105,15 +124,16 @@ nc_extract_smartcheck <- function(lon, lat, pred.data, pred.cent, pt.grid,
   # pred.cent: center value of pred.data
   # pt.grid: coordinates of current grid cell centroid
   # grid.rad.half: half of grid cell width or length
-  # na.flag: 1 if 'invlaid' value is NA; 2 if 'invalid value is > 0
+  # invalid.type.flag: 1 if 'invlaid' value is NA; 2 if 'invalid value is > 0
+  # within.poly.check: Logical flag for if nc file point with valid value
+  #   needs to be within grid cell
   
   
   #--------------------------------------------------------
-  ## Create needed objects
+  stopifnot(require(sf), is.logical(within.poly.check))
+  ### Create needed objects
   # nc file points
-  nc.coords <- expand.grid(
-    as.numeric(lon), as.numeric(lat)
-  )
+  nc.coords <- expand.grid(as.numeric(lon), as.numeric(lat))
   pred.all <- as.vector(pred.data)
   
   pred.sf <- nc.coords %>%
@@ -124,37 +144,55 @@ nc_extract_smartcheck <- function(lon, lat, pred.data, pred.cent, pt.grid,
   cent.sfc <- st_sfc(st_point(pt.grid), crs = 4326)
   
   # Grid cell (polygon)
-  i <- pt.grid
-  j <- grid.rad.half
-  poly.sfc <- st_sfc(st_polygon(list(matrix(
-    c(i[1] + j, i[1] - j, i[1] - j, i[1] + j, i[1] + j,
-      i[2] + j, i[2] + j, i[2] - j, i[2] - j, i[2] + j),
-    ncol = 2
-  ))), crs = 4326); rm(i, j)
+  if (within.poly.check) {
+    i <- pt.grid
+    j <- grid.rad.half
+    poly.sfc <- st_sfc(st_polygon(list(matrix(
+      c(i[1] + j, i[1] - j, i[1] - j, i[1] + j, i[1] + j,
+        i[2] + j, i[2] + j, i[2] - j, i[2] - j, i[2] + j),
+      ncol = 2
+    ))), crs = 4326); rm(i, j)
+  }
+  
   
   #--------------------------------------------------------
-  ## Determine which of the points both have a valid value and
-  ##   are within the grid cell
+  ### Determine which of the points meet smartcheck requirements
   numcols <- length(lon)
   numrows <- length(lat)
   
-  poly.pred.int <- suppressMessages(st_intersects(poly.sfc, pred.sf)[[1]])
-  if (na.flag == 1) {
-    pred.which <- which(
-      (1:(numcols * numrows) %in% poly.pred.int) & (!is.na(pred.all))
-    )
+  if (invalid.type.flag == 1) {
+    # Invalid value is NA value
+    if (within.poly.check) {
+      # nc file point with valid value must be within grid cell
+      poly.pred.int <- suppressMessages(st_intersects(poly.sfc, pred.sf)[[1]])
+      pred.which <- which(
+        (1:(numcols * numrows) %in% poly.pred.int) & (!is.na(pred.all))
+      )
+    } else {
+      # nc file point with valid value doesn't have to be within grid cell
+      pred.which <- which(!is.na(pred.all))
+    }
     
-  } else if (na.flag == 2) {
-    pred.which <- which(
-      (1:(numcols * numrows) %in% poly.pred.int) & (pred.all < 0)
-    )
+  } else if (invalid.type.flag == 2) {
+    # Invalid value is value >= 0
+    if (within.poly.check) {
+      # nc file point with valid value must be within grid cell
+      poly.pred.int <- suppressMessages(st_intersects(poly.sfc, pred.sf)[[1]])
+      pred.which <- which(
+        (1:(numcols * numrows) %in% poly.pred.int) & (pred.all < 0)
+      )
+    } else {
+      # nc file point with valid value doesn't have to be within grid cell
+      pred.which <- which(!is.na(pred.all))
+    }
     
   } else {
-    stop("Invalid 'na.flag' value")
+    stop("Invalid 'invalid.type.flag' value")
   }
   
+  
   #--------------------------------------------------------
-  ## If any points meet the requirements, which is closest to the centroid?
+  ### If any points meet the requirements, which is closest to the centroid?
   if (length(pred.which) > 0) {
     cent.pred.dist <- as.numeric(st_distance(cent.sfc, pred.sf))
     names(cent.pred.dist) <- 1:length(pred.all)
