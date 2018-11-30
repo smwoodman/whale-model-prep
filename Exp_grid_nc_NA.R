@@ -4,10 +4,13 @@
 
 
 ###############################################################################
-x1 <- read.csv("../whale-model-prep_data/Grid/Grid_CCSRA_pre/WEAR_3km_2005-01-01.csv")
+x1 <- read.csv("../whale-model-prep_data/Grid/Grid_CCSRA/WEAR_3km_2005-01-01.csv")
 
+# x1.out <- x1 %>% 
+#   mutate(na_flag = as.numeric(is.na(sst.mean))) %>% 
+#   select(lat, lon, na_flag)
 # write.csv(
-#   dplyr::mutate(x1, na_flag = as.numeric(is.na(sst.mean))), 
+#   x1.out, row.names = FALSE,
 #   file = "../whale-model-prep_data/Grid/Grid_CCSRA_na_WEAR.csv"
 # )
 
@@ -16,8 +19,8 @@ x1 <- read.csv("../whale-model-prep_data/Grid/Grid_CCSRA_pre/WEAR_3km_2005-01-01
 # sum(!(which(is.na(x1$sst.mean)) %in% which(is.na(y$depth))))
 # 
 # nrow(x1) #85,869
-# sum(is.na(x1$sst.mean)) #32,284
-# sum(is.na(x1$sst.mean)) - sum(is.na(x1$sst.SD)) # 2,772; same for ssh and ild
+# sum(is.na(x1$sst.mean))
+# sum(is.na(x1$sst.mean)) - sum(is.na(x1$sst.SD)) #same for ssh and ild
 # 
 # x1.sst <- which(is.na(x1$sst.mean))
 # x1.ssh <- which(is.na(x1$ssh.mean))
@@ -40,19 +43,33 @@ x1 <- read.csv("../whale-model-prep_data/Grid/Grid_CCSRA_pre/WEAR_3km_2005-01-01
 ###############################################################################
 # For all lon/lat coords in rows x1.sst, extract values for grid.dates from applicable nc files
 
-### Load and prep
-load("../whale-model-prep_data/Grid/Grid_CCSRA_idx.RDATA") #Created in "CCSRA_2D_Grid_WEAR.R"
+### Determine the nc file lat/long index that each grid point is closest to
+# load("../whale-model-prep_data/Grid/Grid_CCSRA_idx.RDATA") #Created in "CCSRA_2D_Grid_WEAR.R"
+# Assumes that indices are constant accross CCSRA nc files
+nc.data <- nc_open("../whale-model-prep_data/CCSRA_nc/CCSRA_wcra31_daily_2D_Jacox/wcra31_sst_daily_1991_2010.nc")
+nc.lon <- ncvar_get(nc.data, 'lon')[, 1]
+nc.lat <- ncvar_get(nc.data, 'lat')[1, ]
+nc_close(nc.data)
+
+
+
+x1$ccsra.idx <- apply(x1[, c("lon", "lat")], 1, function(i) {
+  r.lon <- which.min(abs(nc.lon - i[1]))
+  c.lat <- which.min(abs(nc.lat - i[2]))
+  paste(r.lon, c.lat, sep = "-")
+})
 x1.na <- x1 %>% 
-  mutate(ccsra.lon.idx = z.lon.idx, ccsra.lat.idx = z.lat.idx, 
-         ccsra.idx = paste(z.lon.idx, z.lat.idx, sep = "-")) %>% 
-  dplyr::filter(is.na(sst.mean))
+  mutate(ccsra.lon.idx = map_dbl(strsplit(ccsra.idx, "-"), function(i) as.numeric(i[1])),
+         ccsra.lat.idx = map_dbl(strsplit(ccsra.idx, "-"), function(i) as.numeric(i[2]))) %>% 
+dplyr::filter(is.na(sst.mean)) %>% 
+  dplyr::select(lon, lat, ccsra.lon.idx, ccsra.lat.idx, ccsra.idx)
+
 
 # Remove duplicates lon/lat indices for sake of speed
-length(unique(x1$ccsra.idx))
-i <- x1.na$ccsra.lon.idx[!duplicated(x1.na$ccsra.idx)] #z.lon.idx.unique
-j <- x1.na$ccsra.lat.idx[!duplicated(x1.na$ccsra.idx)] #z.lon.idx.unique
+i <- x1.na$ccsra.lon.idx[!duplicated(x1.na$ccsra.idx)]
+j <- x1.na$ccsra.lat.idx[!duplicated(x1.na$ccsra.idx)]
 
-# Load nc files and get lengths of their time dimensions
+### Load nc files and get lengths of their time dimensions
 nc.ccsra1.sst <- nc_open("../whale-model-prep_data/CCSRA_nc/CCSRA_wcra31_daily_2D_Jacox/wcra31_sst_daily_1991_2010.nc")
 nc.ccsra2.sst <- nc_open("../whale-model-prep_data/CCSRA_nc/CCSRA_NRT2011-2017_daily_2D_Jacox/wcnrt_sst_daily_20110102_20170419.nc")
 nc.ccsra3.sst <- nc_open("../whale-model-prep_data/CCSRA_nc/CCSRA_NRT2011-2017_daily_2D_Jacox/wcnrt_sst_daily_20170420_20180430.nc")
@@ -121,13 +138,24 @@ nc_close(nc.ccsra3.ild)
 ###############################################################################
 # Export grid as a shapefile with a column indicating NA's
 library(sf)
-x1 <- read.csv("../whale-model-prep_data/Grid/Grid_CCSRA_pre/WEAR_3km_2005-01-01.csv")
+# No smart
+x0 <- read.csv("../whale-model-prep_data/Grid/Grid_CCSRA_pre/WEAR_3km_2005-01-01_nosmart")
+x0.shp <- x0 %>% 
+  st_sf(geometry = eSDM::pts_to_sfc_centroids(x0[, c(2, 1)], 0.027 / 2, 4326), crs = 4326) %>% 
+  dplyr::mutate(na_flag = as.numeric(is.na(sst.mean)))
+plot(x0.shp["na_flag"], axes = TRUE, border = NA)
+
+st_write(x0.shp, "../whale-model-prep_data/shapefiles/grid_ccsra_naflag_nosmart.shp")
+
+
+# Smartcheck
+x1 <- read.csv("../whale-model-prep_data/Grid/Grid_CCSRA/WEAR_3km_2005-01-01.csv")
 x1.shp <- x1 %>% 
-   st_sf(geometry = eSDM::pts_to_sfc_centroids(x1[, c(2, 1)], 0.027 / 2, 4326), crs = 4326) %>% 
+  st_sf(geometry = eSDM::pts_to_sfc_centroids(x1[, c(2, 1)], 0.027 / 2, 4326), crs = 4326) %>% 
   dplyr::mutate(na_flag = as.numeric(is.na(sst.mean)))
 plot(x1.shp["na_flag"], axes = TRUE, border = NA)
 
-st_write(x1.shp, "../whale-model-prep_data/shapefiles/grid_ccsra_naflag.shp")
+st_write(x1.shp, "../whale-model-prep_data/shapefiles/grid_ccsra_naflag_smart.shp")
 
 
 ###############################################################################
