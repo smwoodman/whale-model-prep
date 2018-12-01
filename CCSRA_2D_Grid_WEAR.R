@@ -35,7 +35,7 @@ source("Funcs_WEAR.R")
 # }
 
 ### Run install.packages() below when running this code for the first time
-# install.packages("ncdf4", "dplyr", "purrr", "lubridate", "sf")
+# install.packages(c("ncdf4", "dplyr", "purrr", "lubridate", "sf"))
 library(ncdf4)
 library(dplyr)
 library(purrr)
@@ -119,7 +119,7 @@ nc.file.date <- as.Date("2017-04-20") # Date at which NRT nc files are split
 
 
 #----------------------------------------------------------
-temp <- read.csv("../whale-model-prep_data/Grid/Grid_CCSRA_na_WEAR.csv")
+temp <- read.csv(paste0(grid.path, "Grid_CCSRA_na_WEAR.csv"))
 ccsra.na.idx <- as.logical(temp$na_flag); rm(temp) #Is TRUE if value is NA
 
 
