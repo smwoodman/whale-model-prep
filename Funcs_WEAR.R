@@ -5,8 +5,7 @@
 # Extract data from nc file for a grid for a given time and given variable
 nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols, 
                        time.idx, var.name, calib, sd.radius, smartcheck, 
-                       grid.rad.half, na.idx = NULL, 
-                       s.invalid.type.flag, s.within.poly.check) {
+                       grid.rad.half, na.idx = NULL, s.type.flag) {
   ### Inputs
   # grid.df: data frame with lon and lat coords of grid cell centroids;
   #   MUST have columns with names 'lon' and 'lat'
@@ -35,6 +34,12 @@ nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
     grid.df.xy[na.idx, ] <- NA
   }
   
+  # Faster to get matrix out now and then pull from matrix
+  pred.data.all <- ncvar_get(
+    nc.data, var.name, start = c(1, 1, time.idx),
+    count = c(nc.nrows, nc.ncols, 1), verbose = FALSE
+  )
+  
   grid.df$pred_lc <- apply(grid.df.xy, 1, function(i) {
     if (anyNA(i)) {
       list(NA, NA)
@@ -45,17 +50,19 @@ nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
       
       # nrows and ncols are used if we are at the edge of the nc file extent
       row1    <- max(r.lon - max(sd.radius), 1)
-      numrows <- min(r.lon + max(sd.radius), nc.nrows) - row1 + 1  
-      col1    <- max(c.lat - max(sd.radius), 1)                        
+      numrows <- min(r.lon + max(sd.radius), nc.nrows) - row1 + 1
+      col1    <- max(c.lat - max(sd.radius), 1)
       numcols <- min(c.lat + max(sd.radius), nc.ncols) - col1 + 1
       
       # Extract pixels surrounding lat/lon point for the grid date
       #   Surrouding pixels have radius sd.radius
       #   Get center pixel value as mean and calculate SD.space from surrounding pixels
-      pred.data <- ncvar_get(
-        nc.data, var.name, start = c(row1, col1, time.idx),
-        count = c(numrows, numcols, 1), verbose = FALSE
-      )
+      # pred.data <- ncvar_get(
+      #   nc.data, var.name, start = c(row1, col1, time.idx),
+      #   count = c(numrows, numcols, 1), verbose = FALSE
+      # )
+      pred.data <- pred.data.all[row1:(row1 + numrows - 1), 
+                                 col1:(col1 + numcols - 1)]
       pred.data <- pred.data + calib
       
       # Determine the index of the center pixel
@@ -74,15 +81,12 @@ nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
             lon = nc.lon[row1:(row1 + numrows - 1)], 
             lat = nc.lat[col1:(col1 + numcols - 1)], 
             pred.data, pred.cent, pt.grid = i, grid.rad.half, 
-            invalid.type.flag = s.invalid.type.flag, 
-            within.poly.check = s.within.poly.check
+            type.flag = s.type.flag
           )
         }
       }
       
-      # if (is.na(pred.cent) & any(!is.na(pred.data))) z <<- z + 1
-      
-      # Calculate desired standrad deviation(s)
+      # Calculate desired standard deviation(s)
       pred.data.sd <- lapply(sd.radius, function(j) {
         d <- list(
           max(idx.cent[1] - j, 1):min(idx.cent[1] + j, numrows), 
@@ -115,8 +119,8 @@ nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
 # If current variable value is invalid (i.e. NA or positive for depth) 
 #   then look around for closest valid value, maybe within the grid cell
 nc_extract_smartcheck <- function(lon, lat, pred.data, pred.cent, pt.grid,
-                                  grid.rad.half, invalid.type.flag, 
-                                  within.poly.check = TRUE) {
+                                  grid.rad.half, type.flag) {
+  # invalid.type.flag, within.poly.check = TRUE
   ### Inputs
   # lon: vector of longitudes for matrix, sorted from smallest to largest
   # lat: vector of latitudes for matrix, sorted from smallest to largest
@@ -130,21 +134,20 @@ nc_extract_smartcheck <- function(lon, lat, pred.data, pred.cent, pt.grid,
   
   
   #--------------------------------------------------------
-  stopifnot(require(sf), is.logical(within.poly.check))
   ### Create needed objects
   # nc file points
   nc.coords <- expand.grid(as.numeric(lon), as.numeric(lat))
-  pred.all <- as.vector(pred.data)
+  pred.all <- as.vector(pred.data) #as.vector() combines by column
   
   pred.sf <- nc.coords %>%
-    mutate(pred = pred.all) %>%  #as.vector() combines by column
+    mutate(pred = pred.all) %>%  
     st_as_sf(coords = c(1, 2), crs = 4326)
   
   # Grid cell centroid
   cent.sfc <- st_sfc(st_point(pt.grid), crs = 4326)
   
   # Grid cell (polygon)
-  if (within.poly.check) {
+  if (type.flag == "etopo") {
     i <- pt.grid
     j <- grid.rad.half
     poly.sfc <- st_sfc(st_polygon(list(matrix(
@@ -157,38 +160,48 @@ nc_extract_smartcheck <- function(lon, lat, pred.data, pred.cent, pt.grid,
   
   #--------------------------------------------------------
   ### Determine which of the points meet smartcheck requirements
-  numcols <- length(lon)
-  numrows <- length(lat)
-  
-  if (invalid.type.flag == 1) {
-    # Invalid value is NA value
-    if (within.poly.check) {
-      # nc file point with valid value must be within grid cell
-      poly.pred.int <- suppressMessages(st_intersects(poly.sfc, pred.sf)[[1]])
-      pred.which <- which(
-        (1:(numcols * numrows) %in% poly.pred.int) & (!is.na(pred.all))
-      )
-    } else {
-      # nc file point with valid value doesn't have to be within grid cell
-      pred.which <- which(!is.na(pred.all))
-    }
+  if (type.flag == "etopo") {
+    poly.pred.int <- suppressMessages(st_intersects(poly.sfc, pred.sf)[[1]])
+    pred.which <- which(
+      (1:(length(lon) * length(lat)) %in% poly.pred.int) & (pred.all < 0)
+    )
     
-  } else if (invalid.type.flag == 2) {
-    # Invalid value is value >= 0
-    if (within.poly.check) {
-      # nc file point with valid value must be within grid cell
-      poly.pred.int <- suppressMessages(st_intersects(poly.sfc, pred.sf)[[1]])
-      pred.which <- which(
-        (1:(numcols * numrows) %in% poly.pred.int) & (pred.all < 0)
-      )
-    } else {
-      # nc file point with valid value doesn't have to be within grid cell
-      pred.which <- which(!is.na(pred.all))
-    }
+  } else if (type.flag == "ccsra") {
+    pred.which <- which(!is.na(pred.all))
     
   } else {
-    stop("Invalid 'invalid.type.flag' value")
+    stop("Invalid 'type.flag' value")
   }
+  
+  # if (invalid.type.flag == 1) {
+  #   # Invalid value is NA value
+  #   if (within.poly.check) {
+  #     # nc file point with valid value must be within grid cell
+  #     poly.pred.int <- suppressMessages(st_intersects(poly.sfc, pred.sf)[[1]])
+  #     pred.which <- which(
+  #       (1:(numcols * numrows) %in% poly.pred.int) & (!is.na(pred.all))
+  #     )
+  #   } else {
+  #     # nc file point with valid value doesn't have to be within grid cell
+  #     pred.which <- which(!is.na(pred.all))
+  #   }
+  #   
+  # } else if (invalid.type.flag == 2) {
+  #   # Invalid value is value >= 0
+  #   if (within.poly.check) {
+  #     # nc file point with valid value must be within grid cell
+  #     poly.pred.int <- suppressMessages(st_intersects(poly.sfc, pred.sf)[[1]])
+  #     pred.which <- which(
+  #       (1:(numcols * numrows) %in% poly.pred.int) & (pred.all < 0)
+  #     )
+  #   } else {
+  #     # nc file point with valid value doesn't have to be within grid cell
+  #     pred.which <- which(pred.all < 0)
+  #   }
+  #   
+  # } else {
+  #   stop("Invalid 'invalid.type.flag' value")
+  # }
   
   
   #--------------------------------------------------------

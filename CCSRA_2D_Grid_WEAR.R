@@ -91,8 +91,8 @@ if (user == "KAF") {
 } else {
   stop("Invalid value supplied for 'user' object")
 }
-#
-# 
+
+
 # ---------------------------------------------------------------------------
 # Set Predictor variable names, and set up array with cruise dates which grid files 
 #  will be extracted from the nc files.
@@ -115,15 +115,7 @@ gridlat        <- grid.pixels$lat
 # Objects used within for() loops
 # Need to change 'grid.rad.half' depending on grid resolution (currently for 3km grid)
 grid.rad.half <- 0.027 / 2
-nc.file.date <- as.Date("2017-04-20")
-
-
-#----------------------------------------------------------
-# # SMW testing for "Exp_grid_nc_NA.R"
-# # For nc_extract(): z.lon.idx <<- c(z.lon.idx, r.lon); z.lat.idx <<- c(z.lat.idx, c.lat)
-# z.lon.idx <- c()
-# z.lat.idx <- c()
-# save(z.lon.idx, z.lat.idx, file = "../whale-model-prep_data/Grid/Grid_CCSRA_idx.RDATA")
+nc.file.date <- as.Date("2017-04-20") # Date at which NRT nc files are split
 
 
 #----------------------------------------------------------
@@ -133,20 +125,18 @@ ccsra.na.idx <- as.logical(temp$na_flag); rm(temp) #Is TRUE if value is NA
 
 #----------------------------------------------------------
 t1 <- Sys.time()
-# for() loops take 2.3 minutes per var for one day
-#   using nc_extract takes ~85s
-# for() take 12.64878 mins for 3 vars for 2 days
-#   using nc_extract() takes 8.566133 mins
+# 30 Nov: 4.81 min for 2 days (2005 Jan 1, 3)
 
 
 #----------------------------------------------------------
 # Loop through each daily grid file to be created 
-#   To run in smaller batches, specify start and end of grid
-# grid.dates[1100]: "2011-01-08"
-# grid.dates[2250]: "2017-04-26"
+# To run in smaller batches, specify start and end of grid date indices
+#   grid.dates[1100]: "2011-01-08"
+#   grid.dates[2250]: "2017-04-26"
+
 startgrid <- 1
-endgrid   <- 3 #2374 for WEAR
-# z <- 0 #z is used in nc_extract()
+endgrid   <- 2 #2374 for WEAR 3km grid
+
 for(g in startgrid:endgrid) {
   ### Get year, month, day details for this grid file
   grid.data <- grid.pixels
@@ -176,7 +166,7 @@ for(g in startgrid:endgrid) {
       )
     )
     
-    # Get nc file data to ID appropriate indices (could go in nc_extract()...)
+    # Get nc file data
     nc.data <- nc_open(nc.file)
     
     ROMSlat   <- ncvar_get(nc.data, 'lat')[1, ]
@@ -188,12 +178,10 @@ for(g in startgrid:endgrid) {
     ROMS.year  <- ncvar_get(nc.data, 'year')
     ROMS.month <- ncvar_get(nc.data, 'month')
     ROMS.day   <- ncvar_get(nc.data, 'day')
-    # ROMS.data <- data.frame(ROMS.year, ROMS.month, ROMS.day)
     day.index <- which(
       (ROMS.year == grid.year) & (ROMS.month == grid.month) & (ROMS.day == grid.day)
     )
-    # ROMS.ymd <- paste(ROMS.year[day.index], ROMS.month[day.index], ROMS.day[day.index])
-    
+
     # Check that info for that days exists in the nc file
     if (length(day.index) == 0) {
       ROMS.ymd <- paste(ROMS.year[day.index], ROMS.month[day.index], ROMS.day[day.index])
@@ -213,9 +201,7 @@ for(g in startgrid:endgrid) {
         grid.data, nc.data, ROMSlon, ROMSlat, ROMSnrows, ROMSncols,
         day.index, var.name = p, calib = calib.val, sd.radius = 1, 
         smartcheck = TRUE, grid.rad.half = grid.rad.half, 
-        na.idx = ccsra.na.idx, 
-        s.invalid.type.flag = 1, 
-        s.within.poly.check = FALSE
+        na.idx = ccsra.na.idx, s.type.flag = "ccsra"
       )
     }
     
@@ -234,59 +220,11 @@ Sys.time() - t1
 
 #-------------------------------------------------------------------------------------
 # For spot-checking, extract one day's complete SST grid (26 June 2014)
-#   NOTE:  Values all look good, including edge calculations
 #
 # testSST<-ncvar_get(nc.data,p,start=c(1,1,day.index),
 #                    count=c(ROMSnrows,ROMSncols,1),verbose=FALSE)
 # rownames(testSST) <-ROMSlon
 # colnames(testSST) <-ROMSlat
 # write.csv(testSST,"SST26Jun2014.csv")
-
-
-#-------------------------------------------------------------------------------------
-
-
-# # Determine the pixels needed for grid location, if lat/long are not NA
-# grid.data$Predictor.mean   <- NA     #  Add generic columns
-# grid.data$Predictor.SD     <- NA     #   for predictor
-# 
-# for (y in 1:num.pixels) {
-#   if (!is.na(gridlat[y]) & !is.na(gridlon[y])) {
-#     c.lat <- which(abs(ROMSlat - gridlat[y]) == min(abs(ROMSlat - gridlat[y])))[1] #[1] added by SMW - TBD
-#     r.lon <- which(abs(ROMSlon - gridlon[y]) == min(abs(ROMSlon - gridlon[y])))[1] #[1] added by SMW - TBD
-# 
-#     # if (length(r.lon) > 1 | length(c.lat) > 1) browser()
-#     
-#     # nrows and ncols are used if we are at the edge of the data grid
-#     row1    <- max(r.lon - 1, 1)
-#     numrows <- min(r.lon + 1, ROMSnrows) - row1 + 1
-#     col1    <- max(c.lat - 1, 1)
-#     numcols <- min(c.lat + 1, ROMSncols) - col1 + 1
-# 
-#     # newlon <- ROMSlon[row1:(row1+numrows-1)]
-#     # newlat <- ROMSlat[col1:(col1+numcols-1)]
-# 
-#     #  Extract 9 pixels surrounding lat/lon point for the grid date
-#     #  Get center pixel value as mean and calculate SD.space from all 9 pixels
-#     #  A few print statements for checking:
-#     #    print(paste0('Extracting ',p,' for: '))
-#     #    print(paste(ROMSlat[c.lat],ROMSlon[r.lon],ROMS.ymd))
-# 
-#     pred.data <- ncvar_get(
-#       nc.data, p, start = c(row1, col1, day.index),
-#       count = c(numrows, numcols, 1), verbose = FALSE
-#     )
-# 
-#     if (p == "ssh" & grid.year >= 2011) {
-#       pred.data <- pred.data + ssh.calib
-#     }
-# 
-#     grid.data$Predictor.mean[y] <- pred.data[1 + (r.lon - row1), 1 + (c.lat - col1)]
-#     grid.data$Predictor.SD[y]   <- sd(pred.data[,], na.rm = TRUE)
-#   } # end of if there are no NAs
-# }  # y loop (grid pixels)
-# 
-# new.Preds <- c(ncol(grid.data) - 1,  ncol(grid.data))
-# names(grid.data)[new.Preds] <- c(paste0(p, '.mean'), paste0(p, '.SD'))
 
 #-------------------------------------------------------------------------------------

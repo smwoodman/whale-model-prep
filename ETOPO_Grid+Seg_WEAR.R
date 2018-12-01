@@ -135,8 +135,7 @@ out.data$depth_lc <- apply(cbind(lon, lat), 1, function(i) {
       pred.cent <- nc_extract_smartcheck(
         ETOPO.lon[row1:(row1 + numrows - 1)], 
         ETOPO.lat[col1:(col1 + numcols - 1)], 
-        pred.data, pred.cent, i, grid.rad.half, 
-        invalid.type.flag = 2, within.poly.check = TRUE
+        pred.data, pred.cent, i, grid.rad.half, type.flag = "etopo"
       )
     }
     
@@ -169,6 +168,6 @@ out.data$depth_sd[land] <- NA
 # d <- read.csv("../whale-model-prep_data/Grid/Grid_Nonrectangle_3km_WEAR_bathy.csv")
 # all.equal(d, out.data)
 
-write.table(out.data, outfile, sep = "," , col.names = TRUE, row.names = FALSE)
+# write.table(out.data, outfile, sep = "," , col.names = TRUE, row.names = FALSE)
 
 ###############################################################################
