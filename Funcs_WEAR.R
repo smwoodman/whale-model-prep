@@ -27,6 +27,9 @@ nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
   # s.within.poly.check: passed to within.poly.check of nc_extract_smartcheck() 
   
   
+  # If any indices have already been identified as going to be NA, 
+  #   set their lat/long to NA so that the apply() statement doesn't
+  #   both to get data for them
   grid.df.xy <- grid.df[, c("lon", "lat")]
   
   if (!is.null(na.idx)) {
@@ -34,12 +37,13 @@ nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
     grid.df.xy[na.idx, ] <- NA
   }
   
-  # Faster to get matrix out now and then pull from matrix
+  # It is faster to get matrix out now and then pull from nc file each time
   pred.data.all <- ncvar_get(
     nc.data, var.name, start = c(1, 1, time.idx),
     count = c(nc.nrows, nc.ncols, 1), verbose = FALSE
   )
   
+  # Apply across rows of lat/long coordinates
   grid.df$pred_lc <- apply(grid.df.xy, 1, function(i) {
     if (anyNA(i)) {
       list(NA, NA)
