@@ -99,8 +99,8 @@ nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
     }
   })
   
-  # Process list-column reutrned by apply()
-  if (identical(sd.radius, 1)) {
+  # Process list-column returned by apply()
+  if (identical(sd.radius, 1)) { #CCSRA/basic
     names.d <- c(paste0(var.name, ".mean"), paste0(var.name, ".SD"))
     grid.df %>% 
       mutate(pred = purrr::map_dbl(pred_lc, function(j) j[[1]]), 
@@ -108,9 +108,20 @@ nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
       select(-pred_lc) %>% 
       set_names(head(names(grid.df), -1), names.d)
     
+  } else if (identical(sd.radius, c(4, 12))) { #murSST
+    names.d <- c(
+      paste0(var.name, ".mean"), 
+      paste0(var.name, ".SD.", sprintf("%02.0f", sd.radius))
+    )
+    d <- grid.df %>% 
+      mutate(pred = purrr::map_dbl(pred_lc, function(j) j[[1]]), 
+             pred_sd1 = purrr::map_dbl(pred_lc, function(j) j[[2]]), 
+             pred_sd2 = purrr::map_dbl(pred_lc, function(j) j[[3]])) %>% 
+      select(-pred_lc) %>% 
+      set_names(head(names(grid.df), -1), names.d)
+    
   } else {
-    names.d <- c(paste0(var.name, ".mean"), paste0(var.name, ".SD.", sd.radius))
-    stop("nc_extract() not ready for multiple sd.radius values yet")
+    stop("nc_extract() not ready for these sd.radius values yet")
   }
 }
 
