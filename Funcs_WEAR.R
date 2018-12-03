@@ -22,10 +22,21 @@ nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
   #   (e.g. mursst)
   # smartcheck: logical flag for whether or not to use nc_extract_smartcheck()
   # grid.rad.half: half of grid cell length; passed to nc_extract_smartcheck()
+  #   Only required if (s.type.flag %in% c("etopo", "mursst"))
   # na.idx: indices of rows in grid.df where the extracted value will be NA
-  # s.invalid.type.flag: passed to invalid.type.flag of nc_extract_smartcheck() 
-  # s.within.poly.check: passed to within.poly.check of nc_extract_smartcheck() 
+  # s.type.flag: passed to type.flag in nc_extract_smartcheck()
   
+  
+  if (smartcheck) {
+    stopifnot(
+      s.type.flag %in% c("etopo", "ccsra", "mursst")
+    )
+    
+    if ((s.type.flag %in% c("etopo", "mursst")) && !exists("grid.rad.half")) {
+      stop("If s.type.flag is one of 'etopo' or 'mursst', you must provide ", 
+           "a value for grid.rad.half")
+    } 
+  }
   
   # If any indices have already been identified as going to be NA, 
   #   set their lat/long to NA so that the apply() statement doesn't
@@ -75,7 +86,6 @@ nc_extract <- function(grid.df, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
       
       # Perform smartcheck if desired
       if (smartcheck) {
-        stopifnot(exists("grid.rad.half"))
         # If the center pixel value is NA but at least one of the 
         #   surrounding nc file points are non-NaN, then get the value of 
         #   the closest valid nc file point that is still within the grid cell
@@ -143,9 +153,8 @@ nc_extract_smartcheck <- function(lon, lat, pred.data, pred.cent, pt.grid,
   # pred.cent: center value of pred.data
   # pt.grid: coordinates of current grid cell centroid
   # grid.rad.half: half of grid cell width or length
-  # invalid.type.flag: 1 if 'invlaid' value is NA; 2 if 'invalid value is > 0
-  # within.poly.check: Logical flag for if nc file point with valid value
-  #   needs to be within grid cell
+  # type.flag: which requirements does smartcheck have; 
+  #   one of "etopo", "ccsra", or "mursst" 
   
   
   #--------------------------------------------------------
@@ -162,7 +171,7 @@ nc_extract_smartcheck <- function(lon, lat, pred.data, pred.cent, pt.grid,
   cent.sfc <- st_sfc(st_point(pt.grid), crs = 4326)
   
   # Grid cell (polygon)
-  if (type.flag == "etopo") {
+  if (type.flag %in% c("etopo", "mursst")) {
     i <- pt.grid
     j <- grid.rad.half
     poly.sfc <- st_sfc(st_polygon(list(matrix(
@@ -170,13 +179,15 @@ nc_extract_smartcheck <- function(lon, lat, pred.data, pred.cent, pt.grid,
         i[2] + j, i[2] + j, i[2] - j, i[2] - j, i[2] + j),
       ncol = 2
     ))), crs = 4326); rm(i, j)
+    
+    # Which prediction (nc) points are within grid cell?
+    poly.pred.int <- suppressMessages(st_intersects(poly.sfc, pred.sf)[[1]])
   }
   
   
   #--------------------------------------------------------
-  ### Determine which of the points meet smartcheck requirements
+  ### Determine which of the points meet requirements based on data type
   if (type.flag == "etopo") {
-    poly.pred.int <- suppressMessages(st_intersects(poly.sfc, pred.sf)[[1]])
     pred.which <- which(
       (1:(length(lon) * length(lat)) %in% poly.pred.int) & (pred.all < 0)
     )
@@ -184,39 +195,14 @@ nc_extract_smartcheck <- function(lon, lat, pred.data, pred.cent, pt.grid,
   } else if (type.flag == "ccsra") {
     pred.which <- which(!is.na(pred.all))
     
+  } else if (type.flag == "mursst") {
+    pred.which <- which(
+      (1:(length(lon) * length(lat)) %in% poly.pred.int) & (!is.na(pred.all))
+    )
+    
   } else {
     stop("Invalid 'type.flag' value")
   }
-  
-  # if (invalid.type.flag == 1) {
-  #   # Invalid value is NA value
-  #   if (within.poly.check) {
-  #     # nc file point with valid value must be within grid cell
-  #     poly.pred.int <- suppressMessages(st_intersects(poly.sfc, pred.sf)[[1]])
-  #     pred.which <- which(
-  #       (1:(numcols * numrows) %in% poly.pred.int) & (!is.na(pred.all))
-  #     )
-  #   } else {
-  #     # nc file point with valid value doesn't have to be within grid cell
-  #     pred.which <- which(!is.na(pred.all))
-  #   }
-  #   
-  # } else if (invalid.type.flag == 2) {
-  #   # Invalid value is value >= 0
-  #   if (within.poly.check) {
-  #     # nc file point with valid value must be within grid cell
-  #     poly.pred.int <- suppressMessages(st_intersects(poly.sfc, pred.sf)[[1]])
-  #     pred.which <- which(
-  #       (1:(numcols * numrows) %in% poly.pred.int) & (pred.all < 0)
-  #     )
-  #   } else {
-  #     # nc file point with valid value doesn't have to be within grid cell
-  #     pred.which <- which(pred.all < 0)
-  #   }
-  #   
-  # } else {
-  #   stop("Invalid 'invalid.type.flag' value")
-  # }
   
   
   #--------------------------------------------------------

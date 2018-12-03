@@ -114,7 +114,7 @@ gridlat        <- grid.pixels$lat
 
 # Objects used within for() loops
 # Need to change 'grid.rad.half' depending on grid resolution (currently for 3km grid)
-grid.rad.half <- 0.027 / 2
+# grid.rad.half <- 0.027 / 2 #Not needed for 'ccsra' smartcheck
 nc.file.date <- as.Date("2017-04-20") # Date at which NRT nc files are split
 
 
@@ -126,6 +126,7 @@ ccsra.na.idx <- as.logical(temp$na_flag); rm(temp) #Is TRUE if value is NA
 #----------------------------------------------------------
 t1 <- Sys.time()
 # 30 Nov: 4.81 min for 2 days (2005 Jan 1, 3)
+# 21.6 hours for 1401-2000
 
 
 #----------------------------------------------------------
@@ -134,8 +135,8 @@ t1 <- Sys.time()
 #   grid.dates[1100]: "2011-01-08"
 #   grid.dates[2250]: "2017-04-26"
 
-startgrid <- 1
-endgrid   <- 2 #2374 for WEAR 3km grid
+startgrid <- 2001
+endgrid   <- 2374 #2374 for WEAR 3km grid
 
 for(g in startgrid:endgrid) {
   ### Get year, month, day details for this grid file
@@ -184,8 +185,7 @@ for(g in startgrid:endgrid) {
 
     # Check that info for that days exists in the nc file
     if (length(day.index) == 0) {
-      ROMS.ymd <- paste(ROMS.year[day.index], ROMS.month[day.index], ROMS.day[day.index])
-      warning("No nc file data for ", ROMS.ymd, " for predictor", p)
+      warning("No nc file data for ", grid.ymd, " for predictor ", p)
       
       grid.data$temp1 <- NA
       grid.data$temp2 <- NA

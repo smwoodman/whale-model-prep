@@ -93,6 +93,9 @@ grid.data.orig <- data.orig %>% select(lon = lon180, lat)
 
 ###############################################################################
 #----------------------------------------------------------
+grid.rad.half <- 0.027 / 2
+
+#----------------------------------------------------------
 t1 <- Sys.time()
 # 30 Nov: 1.12 min for 5 days (2005 Jan 1-9)
 
@@ -106,31 +109,41 @@ startgrid <- 1
 endgrid   <- 5 #2374 for WEAR
 
 for(g in startgrid:endgrid) {
-# Prep  grid.data <- data.orig
+  # Prep  
   grid.date <- grid.dates[g]
   print(paste(g, grid.date, sep = ": "))
   
   # Get nc file data and check that nc file only has data for 1 day
-  nc.data <- nc_open(dates.files.nc[g])
-  if (length(ncvar_get(nc.data, "time")) > 1) warning("nc time error")
+  if (file.exists(dates.files.nc[g])) {
+    nc.data <- nc_open(dates.files.nc[g])
+    if (length(ncvar_get(nc.data, "time")) > 1) stop("nc time error")
+    
+    # nc_extract() is in 'Funcs_WEAR.R'
+    # smartcheck type means that surrounding nc points w/in grid cell are considered
+    grid.data <- nc_extract(
+      grid.data.orig, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
+      time.idx = 1, var.name = varname, calib = 0, sd.radius = pixel.radius, 
+      smartcheck = TRUE, grid.rad.half = grid.rad.half, 
+      na.idx = NULL, s.type.flag = "mursst"
+    )
+    
+    nc_close(nc.data)
+    
+  } else {
+    warning("File", dates.files.nc[g], "does not exist")
+    
+    grid.data <- grid.data.orig
+    grid.data$temp1 <- NA
+    grid.data$temp2 <- NA
+    grid.data$temp3 <- NA
+    names(grid.data) <- c(
+      head(names(grid.data), -3), c(paste0(p, '.mean'), paste0(p, '.SD.04'), paste0(p, '.SD.12'))
+    )
+  }
   
-  # nc_extract() is in 'Funcs_WEAR.R'
-  # Don't need to do smartcheck because 0.1 deg res of CCSRA nc is too big
-  # Original for() loop code is at bottom of file
-  grid.data <- nc_extract(
-    grid.data.orig, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
-    time.idx = 1, var.name = varname, calib = 0, sd.radius = pixel.radius, 
-    smartcheck = FALSE, grid.rad.half = NULL, 
-    na.idx = NULL, s.type.flag = NA
-  )
-  
-  nc_close(nc.data)
-  
-  grid.datafile <- paste0(out.path, 'WEAR_mursst_3km_', grid.date, '_smart.csv')
+  grid.datafile <- paste0(out.path, 'WEAR_mursst_3km_', grid.date, '.csv')
   write.table(grid.data, grid.datafile, sep = "," , col.names = TRUE, row.names = FALSE)
   rm(grid.data, grid.datafile)
-}; rm(g)
-
-Sys.time() - t1
+}; rm(g); Sys.time() - t1
 
 ###############################################################################
