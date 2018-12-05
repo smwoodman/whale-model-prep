@@ -32,8 +32,8 @@ latmin <- 29
 latmax <- 49
 coords.txt <- paste0("(", paste(lonmin, lonmax, latmin, latmax, sep = ")-("), ")")
 
-start.date  <- as.Date("2005-01-01")
-end.date    <- as.Date("2005-01-02")
+start.date  <- as.Date("2013-01-01")
+end.date    <- as.Date("2013-01-01")
 
 days.gap <- 1
 
@@ -73,6 +73,7 @@ download.file(
 ###############################################################################
 ###############################################################################
 # Loop for downloading multiple nc files
+rm(list = ls())
 library(lubridate)
 library(ncdf4)
 
@@ -89,7 +90,7 @@ days.gap <- 1
 # Requires that yearly folders are already created
 # 3var: 751s for 36 files (2005:2008, months 1 to 3, days 1 to 3): ~21s per file
 # 1var: 338s for 36 files (2005:2008, months 1 to 3, days 1 to 3): ~9.4s per file
-for(i in 2015:2017) { #2005:2017
+for(i in 2005:2017) { #2005:2017
   print(i)
   start.date <- as.Date(paste0(i, "-01-01"))
   
@@ -102,7 +103,6 @@ for(i in 2015:2017) { #2005:2017
     
     for(k in (1:days_in_month(curr.j) - 1)) { #(1:days_in_month(curr.j) - 1)
       curr.k <- curr.j %m+% period(k, "day")
-      
       # Download
       string.date.loc <- paste0(
         "[(", curr.k, "T09:00:00Z):", days.gap, ":(", curr.k, "T09:00:00Z)][(",

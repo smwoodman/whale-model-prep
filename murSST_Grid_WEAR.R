@@ -15,7 +15,7 @@ rm(list = ls())
 source("Funcs_WEAR.R")
 
 
-# install.packages("ncdf4", "dplyr", "purrr", "lubridate", "sf")
+# install.packages(c("ncdf4", "dplyr", "purrr", "lubridate", "sf"))
 library(ncdf4)
 library(dplyr)
 library(purrr)
@@ -55,7 +55,6 @@ if (user == "KAF") {
 ###############################################################################
 ### Prep
 infile    <- paste0(in.path, "Grid_Nonrectangle_3km_WEAR.csv")
-outfile   <- paste0(out.path, "Grid_Nonrectangle_3km_WEAR_mursst.csv")
 data.orig <- read.csv(infile, stringsAsFactors = FALSE)
 varname <- 'analysed_sst'
 
@@ -98,6 +97,7 @@ grid.rad.half <- 0.027 / 2
 #----------------------------------------------------------
 t1 <- Sys.time()
 # 30 Nov: 1.12 min for 5 days (2005 Jan 1-9)
+# 03 Dec: 6.5 min for 5 days (2005 Jan 1-9) b/c of smartcheck
 
 #----------------------------------------------------------
 # Loop through each daily grid file to be created 
@@ -105,8 +105,8 @@ t1 <- Sys.time()
 # grid.dates[1100]: "2011-01-08"
 # grid.dates[2250]: "2017-04-26"
 
-startgrid <- 1
-endgrid   <- 5 #2374 for WEAR
+startgrid <- 1478
+endgrid   <- 2374 #2374 for WEAR
 
 for(g in startgrid:endgrid) {
   # Prep  
@@ -115,19 +115,25 @@ for(g in startgrid:endgrid) {
   
   # Get nc file data and check that nc file only has data for 1 day
   if (file.exists(dates.files.nc[g])) {
-    nc.data <- nc_open(dates.files.nc[g])
-    if (length(ncvar_get(nc.data, "time")) > 1) stop("nc time error")
-    
-    # nc_extract() is in 'Funcs_WEAR.R'
-    # smartcheck type means that surrounding nc points w/in grid cell are considered
-    grid.data <- nc_extract(
-      grid.data.orig, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
-      time.idx = 1, var.name = varname, calib = 0, sd.radius = pixel.radius, 
-      smartcheck = TRUE, grid.rad.half = grid.rad.half, 
-      na.idx = NULL, s.type.flag = "mursst"
-    )
-    
-    nc_close(nc.data)
+    nc.data <- try(nc_open(dates.files.nc[g]), silent = TRUE)
+    if (inherits(nc.data, "try-error")) {
+      warning("File ", dates.files.nc[g], " cannot be opened")
+      grid.data <- grid.data.orig
+      
+    } else {
+      if (length(ncvar_get(nc.data, "time")) > 1) stop("nc time error")
+      
+      # nc_extract() is in 'Funcs_WEAR.R'
+      # smartcheck type means that surrounding nc points w/in grid cell are considered
+      grid.data <- nc_extract(
+        grid.data.orig, nc.data, nc.lon, nc.lat, nc.nrows, nc.ncols,
+        time.idx = 1, var.name = varname, calib = 0, sd.radius = pixel.radius, 
+        smartcheck = TRUE, grid.rad.half = grid.rad.half, 
+        na.idx = NULL, s.type.flag = "mursst"
+      )
+      
+      nc_close(nc.data)
+    }
     
   } else {
     warning("File", dates.files.nc[g], "does not exist")
@@ -137,7 +143,7 @@ for(g in startgrid:endgrid) {
     grid.data$temp2 <- NA
     grid.data$temp3 <- NA
     names(grid.data) <- c(
-      head(names(grid.data), -3), c(paste0(p, '.mean'), paste0(p, '.SD.04'), paste0(p, '.SD.12'))
+      head(names(grid.data), -3), "analysed_sst.mean", 'analysed_sst.SD.04', 'analysed_sst.SD.12'
     )
   }
   
