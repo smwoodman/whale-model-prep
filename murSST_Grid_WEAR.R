@@ -37,8 +37,8 @@ if (user == "KAF") {
   out.path <- ""
   
 } else if (user == "SMW") {
-  # nc.path <- "../whale-model-prep_data/mursst_nc/" #SMW local
-  nc.path  <- "J:/Sam_Woodman/mursst_nc/" # J is mmdisk on SMW computer
+  nc.path <- "../whale-model-prep_data/mursst_nc/" #SMW local
+  # nc.path  <- "J:/Sam_Woodman/mursst_nc/" # J is mmdisk on SMW computer
   in.path  <- "../whale-model-prep_data/Grid/"
   out.path <- "../whale-model-prep_data/Grid/Grid_murSST/"
   
@@ -79,7 +79,7 @@ temp <- grid.dates.df %>%
 dates.files.nc <- temp$file_nc; rm(grid.dates.df, temp)
 
 # Get nc file lat/lon info - this will be the same across mursst nc files
-nc.temp  <- nc_open(dates.files.nc[1])
+nc.temp  <- nc_open(dates.files.nc[2000]) #Changed from 1 to some data that is local
 nc.lon   <- ncvar_get(nc.temp, "longitude")
 nc.lat   <- ncvar_get(nc.temp, "latitude")
 nc.nrows <- length(nc.lon)
@@ -105,7 +105,7 @@ t1 <- Sys.time()
 # grid.dates[1100]: "2011-01-08"
 # grid.dates[2250]: "2017-04-26"
 
-startgrid <- 1478
+startgrid <- 1829
 endgrid   <- 2374 #2374 for WEAR
 
 for(g in startgrid:endgrid) {
