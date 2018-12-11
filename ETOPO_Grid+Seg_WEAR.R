@@ -26,7 +26,7 @@ library(sf)
 # Open grid pixel file and initialize variables
 
 #----------------------------------------------------------
-### FOR KAF
+### For KAF
 # etopo.path <- 'C:/KAF/COAST/ETOPO/'
 # path <-  'C:/KAF/PROJECTS/SERDP-CCmodels/WhalePreyModels/RockfishCruiseModels/'
 
@@ -88,8 +88,8 @@ ETOPO.ncols <- length(ETOPO.lat)
 
 # # Notes
 # For a grid file of 30,877 coordinates, apply() is ~6s and for() is ~8s
-# ~5.8 seconds without special stuff
-# ~11.5 seconds with special stuff
+# ~5.8 seconds without smartcheck
+# ~11.5 seconds with smartcheck
 
 
 #------------------------------------------------------------------------------

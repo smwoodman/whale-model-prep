@@ -135,8 +135,8 @@ t1 <- Sys.time()
 #   grid.dates[1100]: "2011-01-08"
 #   grid.dates[2250]: "2017-04-26"
 
-startgrid <- 2001
-endgrid   <- 2374 #2374 for WEAR 3km grid
+startgrid <- 1
+endgrid   <- 2 #2374 for WEAR 3km grid
 
 for(g in startgrid:endgrid) {
   ### Get year, month, day details for this grid file
