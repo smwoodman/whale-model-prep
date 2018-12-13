@@ -156,7 +156,7 @@ if (user=="KAF") {
 
 
 ### Read in segment data file and assign variable names 
-infile <- paste0(seg.path, "LgWhale_CCE_91_14_3km_Segs_BF0_6.csv")
+infile <- paste0(seg.path, "LgWhale_CCE_91_14_3km_Segs_BF0_6_Dec13_2018.csv")
 outfile <- paste0(seg.path, 'WEAR_seg_CCSRA.csv')
 
 seg.data <- read.table(infile, sep = ",", header = TRUE, stringsAsFactors = FALSE)

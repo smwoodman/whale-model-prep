@@ -51,7 +51,7 @@ out.data <- in.data
 # etopo.path <- "../whale-model-prep_data/etopo180_N10-60_W150-100/"
 # path       <- "../whale-model-prep_data/Segments/"
 # 
-# infile  <- paste0(path, 'LgWhale_CCE_91_14_3km_Segs_BF0_6.csv')
+# infile  <- paste0(path, 'LgWhale_CCE_91_14_3km_Segs_BF0_6_Dec13_2018.csv')
 # outfile <- paste0(path, 'WEAR_seg_bathy.csv')
 # in.data <- read.csv(infile, stringsAsFactors = FALSE)
 # num.pts <- nrow(in.data)
