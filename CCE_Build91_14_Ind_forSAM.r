@@ -70,8 +70,9 @@ rm(filter.beaufort, filter.effort.type)
 
 SpecCod  <- c("Sc","Dc","Dd","Tt","Gg","Lo","Lb", "Pd", "Pm", "sb", "Bb", "Bp", "Bm", "Mn")
 SpecNums <- c(13, 16, 17, 18, 21, 22, 27, 44, 46, 51, 63, 74, 75, 76)
-SpNum    <- 75
 stopifnot(length(SpecCod) == length(SpecNums))
+SpNum    <- 75
+names(SpNum) <- SpecCod[which(SpecNums == SpNum)] #Makes SpNum a named object
 
 ANI.col <-  paste("ANI", SpNum, sep = ".")
 nSI.col <-  paste("nSI", SpNum, sep = ".")
@@ -139,11 +140,11 @@ wc8yrs.nona$ESW.51 <- ((wc8yrs.nona$ESW.51 + wc8yrs.nona$ESW.61)/2)
 avegs <- (wc8yrs.nona[[ANI.col]] / wc8yrs.nona[[nSI.col]]) #average group size
 avegs[is.na(avegs)] <- 0
 ind <- wc8yrs.nona[[nSI.col]] * avegs   # Number of individuals (response variable)
-effort <- (wc8yrs.nona[[ESW.col]] * wc8yrs.nona[[gZERO.col]] * wc8yrs.nona$dist * 2)   
+effort <- (wc8yrs.nona[[ESW.col]] * wc8yrs.nona[[gZERO.col]] * wc8yrs.nona$dist * 2)
 # ^ To account for searching on both sides multiply by 2; i.e. effactive area search
 
 wc8yrs.nona <- cbind.data.frame(wc8yrs.nona, ind, avegs, effort)
-# wc8yrs.nona <- wc8yrs.nona[wc8yrs.nona$efftyp != "F", ]   ##  REMOVE fine lines from 2005; SMW: filter moved to top
+# wc8yrs.nona <- wc8yrs.nona[wc8yrs.nona$efftyp != "F", ]   ##  REMOVE fine lines from 2005; SMW moved filter to top
 rm(ind, avegs, effort)
 
 wc8yrs.nona.no0 <- wc8yrs.nona[wc8yrs.nona$avegs > 0, ] #For group size model, build only using 
