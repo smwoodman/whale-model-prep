@@ -36,4 +36,7 @@ vignettes/*.pdf
 rsconnect/
 .Rproj.user
 
+# Files that shouldn't be shared
 Exp_GIS/
+CCE_Build91_14_Ind_forSAM.r
+CCE_DailyGridsCrop_Ind_91_14_forSAM.r
