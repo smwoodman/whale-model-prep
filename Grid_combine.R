@@ -1,8 +1,6 @@
 ### Combine CCSRA and murSST (grid) extractions into one .csv file
 
-substrRight <- function(x, n) {
-  substr(x, nchar(x) - n + 1, nchar(x))
-}
+substrRight <- function(x, n) substr(x, nchar(x) - n + 1, nchar(x))
 
 
 path.ccsra <- "../whale-model-prep_data/Grid/Grid_CCSRA/"

@@ -53,7 +53,7 @@ map.base <- st_as_sfc(maps::map('world2', plot = FALSE, fill = TRUE))
 # lonmin <- 360 - 125.0
 # lonmax <- 360 - 118.0
 # poly.df <- data.frame(
-#   X1 = c(lonmax, lonmin, lonmin, lonmax, lonmax), 
+#   X1 = c(lonmax, lonmin, lonmin, lonmax, lonmax),
 #   X2 = c(latmin, latmin, latmax, latmax, latmin)
 # )
 
@@ -68,7 +68,7 @@ list.vertices <- list(
   c(238, 33),
   c(234, 38),
   c(234, 48.12),
-  c(235.210364011, 48.5375173285), 
+  c(235.210364011, 48.5375173285),
   c(235.494102374, 48.3877105965),
   c(237, 48),
   c(237, 40),
@@ -84,12 +84,12 @@ poly.df <- data.frame(do.call(rbind, list.vertices))
 # Thus, the shortest distance from a grid cell edge to 
 #   the grid cell centroid will be (pixel / 2).
 
-# pixel <- .225         # 25km
-# pixel <- .090         # 10km
-# pixel <- 0.10         # 0.1 degree for SeaGrant modeling project
-# pixel <- .045         # 5km
-pixel <- .027         # 3km
-# pixel <- .018         # 2km
+# pixel <- .225          # 25km
+# pixel <- .090          # 10km
+# pixel <- 0.10          # 0.1 degree for SeaGrant modeling project
+# pixel <- 0.045         # 5km
+pixel <- 0.027         # 3km
+# pixel <- 0.018         # 2km
 
 
 #------------------------------------------------------------------------------
@@ -138,7 +138,8 @@ grid.cent.df <- data.frame(
   lon180 = ifelse(lon > 180, lon - 360, lon),
   lon360 = ifelse(lon < 0, lon + 360, lon),
   area_km = as.numeric(st_area(grid[grid.cent.which])) / 1e+06
-) %>% dplyr::arrange(lat, lon360) 
+) %>% 
+  dplyr::arrange(lat, lon360) 
 
 
 #------------------------------------------------------------------------------
@@ -157,3 +158,13 @@ write.csv(grid.cent.df, file = outfile, row.names = FALSE)
 # plot(map.base, add = TRUE, col = "tan")
 
 ###############################################################################
+# Exp
+d <- eSDM::pts2poly_centroids(dplyr::select(grid.cent.df, lon180, lat, area_km), 0.027 / 2, crs = 4326) %>% 
+  mutate(base_idx = 1:85869)
+plot(st_geometry(d), border = "blue", add = TRUE)
+
+x.land <- st_read("C:/SMW/Ensemble Case Study/GIS_Work/Shapefiles/World_countries_trunc.shp")
+plot(x.land, add = TRUE, fill = "green")
+
+d.e <- st_erase(d, x.land) %>% 
+  mutate(area2_km = as.numeric(st_area(grid[grid.cent.which])) / 1e+06)

@@ -77,7 +77,8 @@ if (user == "KAF") {
   
 } else if (user == "SMW") {
   nc.path31 <- '../whale-model-prep_data/CCSRA_nc/CCSRA_wcra31_daily_2D_Jacox/' 
-  nc.pathNRT <- '../whale-model-prep_data/CCSRA_nc/CCSRA_NRT2011-2017_daily_2D_Jacox/'    
+  # nc.pathNRT <- '../whale-model-prep_data/CCSRA_nc/CCSRA_NRT2011-2017_daily_2D_Jacox/'    
+  nc.pathNRT <- '../whale-model-prep_data/CCSRA_nc/'    
   grid.path <- '../whale-model-prep_data/Grid/'
   out.path <- '../whale-model-prep_data/Grid/Grid_CCSRA/'
   
@@ -98,7 +99,8 @@ if (user == "KAF") {
 #  will be extracted from the nc files.
 ssh.calib <- 0.154     # calibration to add to ccsNRT to make consistent with ccsra31 
 Predictors <- c('sst', 'ssh', 'ild')
-grid.dates <- seq(as.Date("2005-01-01"), as.Date("2017-12-31"), by = 2)
+# grid.dates <- seq(as.Date("2005-01-01"), as.Date("2017-12-31"), by = 2)
+grid.dates <- seq(as.Date("2018-01-01"), as.Date("2018-07-31"), by = 2)
 # write.csv(grid.dates, "Grid.dates.csv")  # save dates for reference
 
 
@@ -115,7 +117,7 @@ gridlat        <- grid.pixels$lat
 # Objects used within for() loops
 # Need to change 'grid.rad.half' depending on grid resolution (currently for 3km grid)
 # grid.rad.half <- 0.027 / 2 #Not needed for 'ccsra' smartcheck
-nc.file.date <- as.Date("2017-04-20") # Date at which NRT nc files are split
+# nc.file.date <- as.Date("2017-04-20") # Date at which NRT nc files are split
 
 
 #----------------------------------------------------------
@@ -136,7 +138,7 @@ t1 <- Sys.time()
 #   grid.dates[2250]: "2017-04-26"
 
 startgrid <- 1
-endgrid   <- 2 #2374 for WEAR 3km grid
+endgrid   <- 106 #2374 for WEAR 3km grid
 
 for(g in startgrid:endgrid) {
   ### Get year, month, day details for this grid file
@@ -160,11 +162,12 @@ for(g in startgrid:endgrid) {
     nc.file <- ifelse(
       grid.year < 2011, 
       paste0(nc.path31, 'wcra31_', p, '_daily_1991_2010.nc'), 
-      ifelse(
-        grid.ymd < nc.file.date,
-        paste0(nc.pathNRT, 'wcnrt_', p, '_daily_20110102_20170419.nc'),
-        paste0(nc.pathNRT, 'wcnrt_', p, '_daily_20170420_20180430.nc')
-      )
+      paste0(nc.pathNRT, 'wcnrt_', p, '_daily_20170420_20180731.nc')
+      # ifelse(
+      #   grid.ymd < nc.file.date,
+      #   paste0(nc.pathNRT, 'wcnrt_', p, '_daily_20110102_20170419.nc'),
+      #   paste0(nc.pathNRT, 'wcnrt_', p, '_daily_20170420_20180430.nc')
+      # )
     )
     
     # Get nc file data

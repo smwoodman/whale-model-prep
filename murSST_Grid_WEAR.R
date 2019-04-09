@@ -62,7 +62,8 @@ varname <- 'analysed_sst'
 pixel.radius  <- c(4, 12)
 
 # Generate dates for which to get data and corresponding filename
-grid.dates <- seq(as.Date("2005-01-01"), as.Date("2017-12-31"), by = 2)
+# grid.dates <- seq(as.Date("2005-01-01"), as.Date("2017-12-31"), by = 2)
+grid.dates <- seq(as.Date("2018-01-01"), as.Date("2018-12-31"), by = 2)
 grid.dates.df <- data.frame(
   grid_dates = grid.dates, year = year(grid.dates), 
   month = month(grid.dates), day = day(grid.dates)
@@ -79,7 +80,7 @@ temp <- grid.dates.df %>%
 dates.files.nc <- temp$file_nc; rm(grid.dates.df, temp)
 
 # Get nc file lat/lon info - this will be the same across mursst nc files
-nc.temp  <- nc_open(dates.files.nc[2000]) #Changed from 1 to some data that is local
+nc.temp  <- nc_open(dates.files.nc[4]) #2000; Changed from 1 to some data that is local
 nc.lon   <- ncvar_get(nc.temp, "longitude")
 nc.lat   <- ncvar_get(nc.temp, "latitude")
 nc.nrows <- length(nc.lon)
@@ -105,8 +106,8 @@ t1 <- Sys.time()
 # grid.dates[1100]: "2011-01-08"
 # grid.dates[2250]: "2017-04-26"
 
-startgrid <- 1829
-endgrid   <- 2374 #2374 for WEAR
+startgrid <- 1
+endgrid   <- 183 #2374 for WEAR 2005 - 2017
 
 for(g in startgrid:endgrid) {
   # Prep  

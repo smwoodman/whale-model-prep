@@ -25,34 +25,34 @@
 ###############################################################################
 # Single nc file download. Testing
 
-### Download exp nc file
-lonmin <- -132
-lonmax <- -116
-latmin <- 29
-latmax <- 49
-coords.txt <- paste0("(", paste(lonmin, lonmax, latmin, latmax, sep = ")-("), ")")
-
-start.date  <- as.Date("2013-01-01")
-end.date    <- as.Date("2013-01-01")
-
-days.gap <- 1
-
-string.date.loc <- paste0(
-  "[(", 
-  start.date, "T09:00:00Z):", days.gap, ":(", end.date, "T09:00:00Z)][(", 
-  latmin, "):1:(", latmax, ")][(", 
-  lonmin, "):1:(", lonmax, ")]"
-)
-file.name.out <- "exp4.nc"
-d <- paste0(
-  "http://coastwatch.pfeg.noaa.gov/erddap/griddap/jplMURSST41.nc?analysed_sst", 
-  string.date.loc
-  #, ",analysis_error", string.date.loc, ",mask", string.date.loc
-)
-download.file(
-  d, destfile = paste0("../whale-model-prep_data/mursst_nc/exp/", file.name.out), 
-  method = "auto", quiet = FALSE, mode = "wb", cacheOK = TRUE
-)
+# ### Download exp nc file
+# lonmin <- -132
+# lonmax <- -116
+# latmin <- 29
+# latmax <- 49
+# coords.txt <- paste0("(", paste(lonmin, lonmax, latmin, latmax, sep = ")-("), ")")
+# 
+# start.date  <- as.Date("2013-01-01")
+# end.date    <- as.Date("2013-01-01")
+# 
+# days.gap <- 1
+# 
+# string.date.loc <- paste0(
+#   "[(", 
+#   start.date, "T09:00:00Z):", days.gap, ":(", end.date, "T09:00:00Z)][(", 
+#   latmin, "):1:(", latmax, ")][(", 
+#   lonmin, "):1:(", lonmax, ")]"
+# )
+# file.name.out <- "exp4.nc"
+# d <- paste0(
+#   "http://coastwatch.pfeg.noaa.gov/erddap/griddap/jplMURSST41.nc?analysed_sst", 
+#   string.date.loc
+#   #, ",analysis_error", string.date.loc, ",mask", string.date.loc
+# )
+# download.file(
+#   d, destfile = paste0("../whale-model-prep_data/mursst_nc/exp/", file.name.out), 
+#   method = "auto", quiet = FALSE, mode = "wb", cacheOK = TRUE
+# )
 
 
 # ### Open and examine exp nc file
@@ -90,7 +90,7 @@ days.gap <- 1
 # Requires that yearly folders are already created
 # 3var: 751s for 36 files (2005:2008, months 1 to 3, days 1 to 3): ~21s per file
 # 1var: 338s for 36 files (2005:2008, months 1 to 3, days 1 to 3): ~9.4s per file
-for(i in 2005:2017) { #2005:2017
+for(i in 2018) { #2005:2017
   print(i)
   start.date <- as.Date(paste0(i, "-01-01"))
   
