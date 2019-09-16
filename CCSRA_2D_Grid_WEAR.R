@@ -57,40 +57,59 @@ library(sf)
 #  MLD/ILD:  should be fine since largely based on the temperature signal.
 #  PEA:  could be different.
 #
-# ---------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
+
+# TODO by user (general): 
+#   1) Change file paths if necessary
+#   2) Update 'grid.dates' object, and startgrid and endgrid if necessary
+
+
+#------------------------------------------------------------------------------
 # Set path for nc files, input grids and output files based on who 
 # is running code (change user initials, all CAPS)
-#
-user <- "SMW"
+
+# Automatically detect computer info and set file paths accordingly
+source("User_script_local.R", local = TRUE, echo = FALSE)
+# user <- "SMW"
+
+## User path descriptions
+# grid.path:  Folder with 'gridfile' object ('Grid_Nonrectangle_3km_WEAR.csv') and 'Grid_CCSRA_na_WEAR.csv'
+# nc.path31:  Folder with 31-yr reanalysis nc files
+# nc.pathNRT: Folder with NRT nc files
+# out.path:   Folder to which to write csv files with extracted data
+# nc.pathNRT.post: Last half of nc file name, aka the part of the file name with the dates coverd by the nc file
+
 
 if (user == "KAF") {  
   grid.path <- 'C:/KAF/PROJECTS/SERDP-CCmodels/CCE1991-2014/'
   nc.path31 <- 'C:/KAF/PROJECTS/SERDP-CCmodels/CCE1991-2014/wcra31_daily/' 
-  nc.pathNRT <- 'C:/KAF/PROJECTS/SERDP-CCmodels/CCE1991-2014/wcnrt_daily/'    # SMW note: probably will have to change
+  nc.pathNRT <- 'C:/KAF/PROJECTS/SERDP-CCmodels/CCE1991-2014/wcnrt_daily/'
   out.path <- 'C:/KAF/PROJECTS/SERDP-CCmodels/CCE1991-2014/CCSRA_pred_grids/'
   
 } else if (user == "EAB") {
   nc.path31 <- 'C:/Users/EABECKER/Documents/HabModels_CCE_1991_2014/Grid_data/wcra31_daily/' 
-  nc.pathNRT <- 'C:/Users/EABECKER/Documents/HabModels_CCE_1991_2014/Grid_data/wcnrt_daily/'   # SMW note: probably will have to change 
+  nc.pathNRT <- 'C:/Users/EABECKER/Documents/HabModels_CCE_1991_2014/Grid_data/wcnrt_daily/'
   grid.path <- 'C:/Users/EABECKER/Documents/HabModels_CCE_2013/Datasets/EAB_CCE/CCE_Grid_Pred_Data/'
   out.path <- 'C:/Users/EABECKER/Documents/HabModels_CCE_1991_2014/Grid_data/CalCOFI/CCSRA_pred_grids/'
   
 } else if (user == "SMW") {
-  nc.path31 <- '../whale-model-prep_data/CCSRA_nc/CCSRA_wcra31_daily_2D_Jacox/' 
-  # nc.pathNRT <- '../whale-model-prep_data/CCSRA_nc/CCSRA_NRT2011-2017_daily_2D_Jacox/'    
-  nc.pathNRT <- '../whale-model-prep_data/CCSRA_nc/'    
+  nc.path31 <- '../whale-model-prep_data/CCSRA_nc/' #TODO fix
+  nc.pathNRT <- '../whale-model-prep_data/CCSRA_nc/CCSRA_NRT2018-2019_daily_2D_Jacox/'    
   grid.path <- '../whale-model-prep_data/Grid/'
   out.path <- '../whale-model-prep_data/Grid/Grid_CCSRA/'
-  
-} else if (user == "JVR") {
-  # TODO: Jessica
-  nc.path31 <- '' 
-  nc.pathNRT <- ''    
-  grid.path <- ''
-  out.path <- ''
+  nc.pathNRT.post <- '_daily_20180801_20190815.nc'
   
 } else {
   stop("Invalid value supplied for 'user' object")
+}
+
+
+# Default name of nc file, if it is not specified by user
+# nc.pathNRT.post is the back half of the nc file name, aka the part of
+#   the file name with the dates coverd by the nc file
+if (!exists("nc.pathNRT.post")) {
+  nc.pathNRT.post <- "_daily_20170420_20180731.nc"
 }
 
 
@@ -100,7 +119,7 @@ if (user == "KAF") {
 ssh.calib <- 0.154     # calibration to add to ccsNRT to make consistent with ccsra31 
 Predictors <- c('sst', 'ssh', 'ild')
 # grid.dates <- seq(as.Date("2005-01-01"), as.Date("2017-12-31"), by = 2)
-grid.dates <- seq(as.Date("2018-01-01"), as.Date("2018-07-31"), by = 2)
+grid.dates <- seq(as.Date("2018-08-01"), as.Date("2019-08-15"), by = 2)
 # write.csv(grid.dates, "Grid.dates.csv")  # save dates for reference
 
 
@@ -133,12 +152,12 @@ t1 <- Sys.time()
 
 #----------------------------------------------------------
 # Loop through each daily grid file to be created 
-# To run in smaller batches, specify start and end of grid date indices
+# To run in smaller batches, specify start and end of grid date indices, e.g.
 #   grid.dates[1100]: "2011-01-08"
 #   grid.dates[2250]: "2017-04-26"
 
 startgrid <- 1
-endgrid   <- 106 #2374 for WEAR 3km grid
+endgrid   <- length(grid.dates)
 
 for(g in startgrid:endgrid) {
   ### Get year, month, day details for this grid file
@@ -162,13 +181,9 @@ for(g in startgrid:endgrid) {
     nc.file <- ifelse(
       grid.year < 2011, 
       paste0(nc.path31, 'wcra31_', p, '_daily_1991_2010.nc'), 
-      paste0(nc.pathNRT, 'wcnrt_', p, '_daily_20170420_20180731.nc')
-      # ifelse(
-      #   grid.ymd < nc.file.date,
-      #   paste0(nc.pathNRT, 'wcnrt_', p, '_daily_20110102_20170419.nc'),
-      #   paste0(nc.pathNRT, 'wcnrt_', p, '_daily_20170420_20180430.nc')
-      # )
+      paste0(nc.pathNRT, 'wcnrt_', p, nc.pathNRT.post)
     )
+    stopifnot(file.exists(nc.file))
     
     # Get nc file data
     nc.data <- nc_open(nc.file)
@@ -185,7 +200,7 @@ for(g in startgrid:endgrid) {
     day.index <- which(
       (ROMS.year == grid.year) & (ROMS.month == grid.month) & (ROMS.day == grid.day)
     )
-
+    
     # Check that info for that days exists in the nc file
     if (length(day.index) == 0) {
       warning("No nc file data for ", grid.ymd, " for predictor ", p)

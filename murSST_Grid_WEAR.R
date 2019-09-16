@@ -10,6 +10,11 @@
 #
 # By Sam Woodman
 
+
+# TODO by user: 
+#   1) Change file paths if necessary
+#   2) Update 'grid.dates' object, and startgrid and endgrid if necessary
+
 ###############################################################################
 rm(list = ls())
 source("Funcs_WEAR.R")
@@ -23,11 +28,17 @@ library(lubridate)
 library(sf)
 
 
-# Paths to files
-user <- "SMW"
+### Paths to files
+source("User_script_local.R", local = TRUE, echo = FALSE)
+# user <- "SMW"
+
+## User path descriptions
+# nc.path:  Top-level folder for murSST nc files (this folder contains yearly folders, e.g. '2019')
+# in.path:  Folder with 'Grid_Nonrectangle_3km_WEAR.csv'
+# out.path: Folder to write csv filed with extracted data
 
 if (user == "KAF") {
-  nc.path  <- ""
+  nc.path  <- "" 
   in.path  <- ""
   out.path <- ""
   
@@ -41,11 +52,6 @@ if (user == "KAF") {
   # nc.path  <- "J:/Sam_Woodman/mursst_nc/" # J is mmdisk on SMW computer
   in.path  <- "../whale-model-prep_data/Grid/"
   out.path <- "../whale-model-prep_data/Grid/Grid_murSST/"
-  
-} else if (user == "JVR") {
-  nc.path  <- ""
-  in.path  <- ""
-  out.path <- ""
   
 } else {
   stop("Invalid value supplied for 'user' object")
@@ -63,7 +69,7 @@ pixel.radius  <- c(4, 12)
 
 # Generate dates for which to get data and corresponding filename
 # grid.dates <- seq(as.Date("2005-01-01"), as.Date("2017-12-31"), by = 2)
-grid.dates <- seq(as.Date("2018-01-01"), as.Date("2018-12-31"), by = 2)
+grid.dates <- seq(as.Date("2019-01-02"), as.Date("2019-08-15"), by = 2)
 grid.dates.df <- data.frame(
   grid_dates = grid.dates, year = year(grid.dates), 
   month = month(grid.dates), day = day(grid.dates)
@@ -107,7 +113,7 @@ t1 <- Sys.time()
 # grid.dates[2250]: "2017-04-26"
 
 startgrid <- 1
-endgrid   <- 183 #2374 for WEAR 2005 - 2017
+endgrid   <- length(grid.dates)
 
 for(g in startgrid:endgrid) {
   # Prep  
