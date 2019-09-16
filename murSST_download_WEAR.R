@@ -86,11 +86,14 @@ coords.txt <- paste0(
 )
 days.gap <- 1
 
+file.name.out.head <- "../whale-model-prep_data/mursst_nc/"
+years.todownload <- 2018:2019
+
 
 # Requires that yearly folders are already created
 # 3var: 751s for 36 files (2005:2008, months 1 to 3, days 1 to 3): ~21s per file
 # 1var: 338s for 36 files (2005:2008, months 1 to 3, days 1 to 3): ~9.4s per file
-for(i in 2018) { #2005:2017
+for(i in years.todownload) { #2005:2017
   print(i)
   start.date <- as.Date(paste0(i, "-01-01"))
   
@@ -114,10 +117,13 @@ for(i in 2018) { #2005:2017
         string.date.loc
         #, ",analysis_error", string.date.loc, ",mask", string.date.loc
       )
+      
       file.name.out <- paste0(
-        "../whale-model-prep_data/mursst_nc/", year(curr.k), 
+        file.name.out.head, year(curr.k), 
         "/mursst_", curr.k, "_", coords.txt, ".nc"
       )
+      stopifnot(file.exists(paste0(file.name.out.head, year(curr.k))))
+      
       if (!file.exists(file.name.out)) {
         download.file(
           url.name, destfile = file.name.out,
