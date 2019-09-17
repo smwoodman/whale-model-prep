@@ -4,10 +4,11 @@
 #   per day every day for 2005-2017.
 #   Only downloaded analysed_sst data (not analysis_error or mark).
 #   Data stored at "J:\Sam_Woodman\mursst_nc" where "J:\" is "mmdisk". 
-#
+# Lots of testing code (commented out) at top of file
 #
 # By Sam Woodman, November 2018
 
+###############################################################################
 ###############################################################################
 # NC FILES NEEDED lat/lon DIMENSIONS
 # Lon range: -132, -116 (228, 244)
@@ -73,7 +74,10 @@
 ###############################################################################
 ###############################################################################
 # Loop for downloading multiple nc files
+#   For loop checks for and skips already-downloaded files
+### TODO by user: update years, extent, days.gap, or path (if necessary)
 rm(list = ls())
+
 library(lubridate)
 library(ncdf4)
 
@@ -81,24 +85,40 @@ lonmin <- -132
 lonmax <- -116
 latmin <- 29
 latmax <- 49
-coords.txt <- paste0(
+coords.txt <- paste0( #Part of url
   "(", paste(lonmin, lonmax, latmin, latmax, sep = ")-("), ")"
 )
-days.gap <- 1
+days.gap <- 1 # Number of days between downloaded files
 
-file.name.out.head <- "../whale-model-prep_data/mursst_nc/"
+
 years.todownload <- 2018:2019
 
+## User path descriptions
+# file.name.out.head: Folder to which to download murSST nc files
+source("User_script_local.R", local = TRUE, echo = FALSE)
+if (user == "KAF") {
+  file.name.out.head  <- "" 
+  
+} else if (user == "EAB") {
+  file.name.out.head  <- ""
+  
+} else if (user == "SMW") {
+  file.name.out.head <- "../whale-model-prep_data/mursst_nc/"
 
-# Requires that yearly folders are already created
+} else {
+  stop("Invalid value supplied for 'user' object")
+}
+
+
+### Requires that yearly folders are already created within file.name.out.head
 # 3var: 751s for 36 files (2005:2008, months 1 to 3, days 1 to 3): ~21s per file
 # 1var: 338s for 36 files (2005:2008, months 1 to 3, days 1 to 3): ~9.4s per file
-for(i in years.todownload) { #2005:2017
+for(i in years.todownload) {
   print(i)
   start.date <- as.Date(paste0(i, "-01-01"))
   
   
-  for(j in (1:12 - 1)) { #(1:12 - 1)
+    for(j in (1:12 - 1)) { #(1:12 - 1)
     print(paste(i, "-", j + 1))
     period.month <- period(j, "month")
     curr.j <- start.date + period.month
@@ -136,4 +156,5 @@ for(i in years.todownload) { #2005:2017
   }
 }; rm(i, j, k)
 
+###############################################################################
 ###############################################################################

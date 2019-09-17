@@ -61,26 +61,24 @@ library(sf)
 
 
 # TODO by user (general): 
-#   1) Change file paths if necessary
-#   2) Update 'grid.dates' object, and startgrid and endgrid if necessary
+#   1) Check file paths
+#   2) Update 'nc.pathNRT.post' object
+#   3) Update 'grid.dates' object, and 'startgrid' and 'endgrid' as necessary
 
 
 #------------------------------------------------------------------------------
 # Set path for nc files, input grids and output files based on who 
 # is running code (change user initials, all CAPS)
 
-# Automatically detect computer info and set file paths accordingly
-source("User_script_local.R", local = TRUE, echo = FALSE)
-# user <- "SMW"
-
 ## User path descriptions
-# grid.path:  Folder with 'gridfile' object ('Grid_Nonrectangle_3km_WEAR.csv') and 'Grid_CCSRA_na_WEAR.csv'
+# grid.path:  Folder with 'gridfile' object ('Grid_Nonrectangle_3km_WEAR.csv') 
+#   and 'Grid_CCSRA_na_WEAR.csv'
 # nc.path31:  Folder with 31-yr reanalysis nc files
 # nc.pathNRT: Folder with NRT nc files
 # out.path:   Folder to which to write csv files with extracted data
-# nc.pathNRT.post: Last half of nc file name, aka the part of the file name with the dates coverd by the nc file
 
-
+# Automatically detect computer info and set file paths accordingly
+source("User_script_local.R", local = TRUE, echo = FALSE)
 if (user == "KAF") {  
   grid.path <- 'C:/KAF/PROJECTS/SERDP-CCmodels/CCE1991-2014/'
   nc.path31 <- 'C:/KAF/PROJECTS/SERDP-CCmodels/CCE1991-2014/wcra31_daily/' 
@@ -98,19 +96,19 @@ if (user == "KAF") {
   nc.pathNRT <- '../whale-model-prep_data/CCSRA_nc/CCSRA_NRT2018-2019_daily_2D_Jacox/'    
   grid.path <- '../whale-model-prep_data/Grid/'
   out.path <- '../whale-model-prep_data/Grid/Grid_CCSRA/'
-  nc.pathNRT.post <- '_daily_20180801_20190815.nc'
   
 } else {
   stop("Invalid value supplied for 'user' object")
 }
 
 
-# Default name of nc file, if it is not specified by user
-# nc.pathNRT.post is the back half of the nc file name, aka the part of
-#   the file name with the dates coverd by the nc file
-if (!exists("nc.pathNRT.post")) {
-  nc.pathNRT.post <- "_daily_20170420_20180731.nc"
-}
+# nc.pathNRT.post is the last half of nc file name, aka the part of the file 
+#   name with the dates in the nc file. Changes 
+# Note: this variable is not used if pre-2011 (aka using reanalysis data)
+nc.pathNRT.post <- '_daily_20180801_20190815.nc'
+# nc.pathNRT.post <- '_daily_20170420_20180731.nc'
+# nc.pathNRT.post <- '_daily_20110102_20170419.nc'
+
 
 
 # ---------------------------------------------------------------------------

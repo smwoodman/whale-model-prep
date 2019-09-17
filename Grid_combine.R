@@ -1,4 +1,5 @@
 ### Combine CCSRA and murSST (grid) extractions into one csv file
+# Trys to concatenate files based on names of files in path.ccsra
 # If necessary, users should update file paths
 
 
@@ -9,14 +10,14 @@
 
 source("User_script_local.R", local = TRUE, echo = FALSE)
 if (user == "KAF") {
-  nc.path  <- "" 
-  in.path  <- ""
-  out.path <- ""
+  path.ccsra  <- ""
+  path.mursst  <- ""
+  path.out <- ""
   
 } else if (user == "EAB") {
-  nc.path  <- ""
-  in.path  <- ""
-  out.path <- ""
+  path.ccsra  <- ""
+  path.mursst  <- ""
+  path.out <- ""
   
 } else if (user == "SMW") {
   path.ccsra <- "../whale-model-prep_data/Grid/Grid_CCSRA/"
