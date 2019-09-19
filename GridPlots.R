@@ -8,6 +8,9 @@
 #   03/20/2019:  Renamedto GridPlots.r and edited by KAF for WEAR (Whale entanglement risk 
 #   assessment) project; also added code to print individual plots to a specified PNG file
 #
+#   Removed st_wrap_dateline() because we want to plot 0 - 360 for Pacific stuff   
+#
+#
 ##################################################################################################
 # Clear workspace
 
