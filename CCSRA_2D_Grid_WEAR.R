@@ -42,6 +42,7 @@ library(purrr)
 library(lubridate)
 library(sf)
 
+
 #-------------------------------END OF FUNCTIONS---------------------------------------
 #
 # Open .nc file for 2011-2015 CCSRA-NRT data and read in non-changing values
