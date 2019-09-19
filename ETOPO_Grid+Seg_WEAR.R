@@ -25,40 +25,51 @@ library(sf)
 # Set path for ETOPO nc file, input segment file and output files 
 # Open grid pixel file and initialize variables
 
-#----------------------------------------------------------
-### For KAF
-# etopo.path <- 'C:/KAF/COAST/ETOPO/'
-# path <-  'C:/KAF/PROJECTS/SERDP-CCmodels/WhalePreyModels/RockfishCruiseModels/'
+source("User_script_local.R", local = TRUE, echo = FALSE)
+grid.seg <- "grid" #"grid" or "seg"
 
-
-#----------------------------------------------------------
-### For SMW grid
-etopo.path <- "../whale-model-prep_data/etopo180_N10-60_W150-100/"
-path       <- "../whale-model-prep_data/Grid/"
-
-infile     <- paste0(path, "Grid_Nonrectangle_3km_WEAR.csv")
-outfile    <- paste0(path, "Grid_Nonrectangle_3km_WEAR_bathy.csv")
-in.data    <- read.csv(infile)
-num.pts    <- nrow(in.data)
-lon        <- in.data$lon180
-lat        <- in.data$lat
-
-out.data <- in.data
-
-
-#----------------------------------------------------------
-# ### For SMW segments
-# etopo.path <- "../whale-model-prep_data/etopo180_N10-60_W150-100/"
-# path       <- "../whale-model-prep_data/Segments/"
-# 
-# infile  <- paste0(path, 'LgWhale_CCE_91_14_3km_Segs_BF0_6_Dec13_2018.csv')
-# outfile <- paste0(path, 'WEAR_seg_bathy.csv')
-# in.data <- read.csv(infile, stringsAsFactors = FALSE)
-# num.pts <- nrow(in.data)
-# lon     <- in.data$mlon
-# lat     <- in.data$mlat
-# 
-# out.data <- in.data
+if (user == "KAF") {
+  etopo.path <- 'C:/KAF/COAST/ETOPO/'
+  path <-  'C:/KAF/PROJECTS/SERDP-CCmodels/WhalePreyModels/RockfishCruiseModels/'
+  
+} else if (user == "EAB") {
+  
+} else if (user == "SMW") {
+  if (grid.seg == "grid") {
+    ### For SMW grid
+    etopo.path <- "../whale-model-prep_data/etopo180_N10-60_W150-100/"
+    path       <- "../whale-model-prep_data/Grid/"
+    
+    infile     <- paste0(path, "Grid_Nonrectangle_3km_WEAR.csv")
+    outfile    <- paste0(path, "Grid_Nonrectangle_3km_WEAR_bathy.csv")
+    in.data    <- read.csv(infile)
+    num.pts    <- nrow(in.data)
+    lon        <- in.data$lon180
+    lat        <- in.data$lat
+    
+    out.data <- in.data
+    
+  } else if (grid.seg == "seg") {
+    # ### For SMW segments
+    etopo.path <- "../whale-model-prep_data/etopo180_N10-60_W150-100/"
+    path       <- "../whale-model-prep_data/Segments/"
+    
+    infile  <- paste0(path, 'LgWhale_CCE_91_14_3km_Segs_BF0_6_Dec13_2018.csv')
+    outfile <- paste0(path, 'WEAR_seg_bathy.csv')
+    in.data <- read.csv(infile, stringsAsFactors = FALSE)
+    num.pts <- nrow(in.data)
+    lon     <- in.data$mlon
+    lat     <- in.data$mlat
+    
+    out.data <- in.data
+    
+  } else {
+    stop("Invalid value supplied for 'grid.seg' object")
+  }
+  
+} else {
+  stop("Invalid value supplied for 'user' object")
+}
 
 
 ###############################################################################
@@ -168,6 +179,7 @@ out.data$depth_sd[land] <- NA
 # d <- read.csv("../whale-model-prep_data/Grid/Grid_Nonrectangle_3km_WEAR_bathy.csv")
 # all.equal(d, out.data)
 
+# # Uncomment to save file
 # write.table(out.data, outfile, sep = "," , col.names = TRUE, row.names = FALSE)
 
 ###############################################################################

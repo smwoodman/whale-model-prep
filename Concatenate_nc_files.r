@@ -1,6 +1,6 @@
 # Concatenates of HYCOM .nc filefiles for E and W of dateline 
 #
-# 10/4/2018 --- none of this is working yet!
+# 10/4/2018 --- Experimental - none of this is working yet!
 #
 #-------------------------------------------------------------------------------------
 

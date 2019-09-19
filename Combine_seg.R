@@ -6,10 +6,25 @@
 
 rm(list = ls())
 
-### Read in all data
-path <- "../whale-model-prep_data/Segments/"
-outfile <- "../whale-model-prep_data/Segments/WEAR_seg_all.csv"
+source("User_script_local.R", local = TRUE, echo = FALSE)
+if (user == "KAF") {
+  path <- ""
+  outfile <- ""
+  
+} else if (user == "EAB") {
+  path <- ""
+  outfile <- ""
+  
+} else if (user == "SMW") {
+  path <- "../whale-model-prep_data/Segments/"
+  outfile <- "../whale-model-prep_data/Segments/WEAR_seg_all.csv"
+  
+} else {
+  stop("Invalid value supplied for 'user' object")
+}
 
+
+### Read in all data
 segs.orig   <- read.csv(paste0(path, "LgWhale_CCE_91_14_3km_Segs_BF0_6_Dec13_2018.csv"), stringsAsFactors = FALSE)
 segs.bathy  <- read.csv(paste0(path, "WEAR_seg_bathy.csv"), stringsAsFactors = FALSE)
 segs.mursst <- read.csv(paste0(path, "WEAR_seg_mursst.csv"), stringsAsFactors = FALSE)

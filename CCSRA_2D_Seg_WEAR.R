@@ -59,7 +59,7 @@ getvarROMS <- function(nc, varname, inpts, calib){
   mth <- ncvar_get(nc.data, 'month')
   day <- ncvar_get(nc.data, 'day')
   tim <- as.POSIXct(paste(yr, mth, day, sep = '-'), tz = 'UTC')
-
+  
   for (i in 1:nrow(inpts)) {
     # print(inpts$dt[i])
     
@@ -126,6 +126,7 @@ getsdROMS <- function(nc, varname, inpts, pixel.radius, calib){
   return(inpts)
 }
 
+
 #-------------------------------END OF FUNCTIONS---------------------------------------
 # Set calibration factor for SSH
 ssh.calib <- 0.035     # constant to add to ccsNRT to make consistent with ccsra31 (per M. Jacox, 5/8/17)  
@@ -134,7 +135,9 @@ pixel.radius <- 1
 # Set path for nc files, input grids and output files based on who 
 # is running code (change user initials, all CAPS)
 #
-user <- "SMW"         # select "EAB" or "KAF"
+
+source("User_script_local.R", local = TRUE, echo = FALSE)
+# user <- "SMW"         # select "EAB" or "KAF"
 
 if (user=="KAF") {  
   seg.path <- 'C:/KAF/PROJECTS/SERDP-CCmodels/WhalePreyModels/RockfishCruiseModels/'
@@ -148,10 +151,13 @@ if (user=="KAF") {
   nc.pathNRT <- 'C:/Users/EABECKER/Documents/HabModels_CCE_1991_2014/Grid_data/wcnrt_daily/'   
   etopo.path <- 'C:/Users/EABECKER/Documents/HabModels_CCE_1991_2014/Grid_data/'
   
-} else { #"SMW"
+} else if (user == "SMW") { #"SMW"
   seg.path <- "../whale-model-prep_data/Segments/"
   nc.path31 <- "../whale-model-prep_data/CCSRA_nc/CCSRA_wcra31_daily_2D_Jacox/"
   nc.pathNRT <- "../whale-model-prep_data/CCSRA_nc/CCSRA_NRT2011-2017_daily_2D_Jacox/"
+  
+} else {
+  stop("Invalid value supplied for 'user' object")
 }
 
 

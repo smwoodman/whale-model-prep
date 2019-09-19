@@ -35,21 +35,21 @@ map.base.360 <- st_as_sfc(maps::map('world2', plot = FALSE, fill = TRUE))
 #                xlim = c(-125, -120), ylim = c(35, 40), cex = 1, pch = 18)
 
 ### Sam testing 2
-x <- read.csv("Documents/R Directories/redateline/Brydes_sample_density_data.csv")
-plot.dens.func(
-  "Documents/R Directories/redateline/sample1a", x, c("mlon", "mlat", "Avg.Dens")
-)
-plot.dens.func(
-  "Documents/R Directories/redateline/sample1b", x, c("mlon", "mlat", "Avg.Dens"), 
-  map.base = map.base.360, 
-  breaks.val = c(0, 0.0001, 0.0003, 0.0005, 0.0006, max(x$Avg.Dens, na.rm = TRUE))
-)
-plot.dens.func(
-  "Documents/R Directories/redateline/sample1c", x, c("mlon", "mlat", "Avg.Dens"), 
-  map.base = map.base.360, 
-  breaks.val = c(0, 0.0001, 0.0003, 0.0005, 0.0006, max(x$Avg.Dens, na.rm = TRUE)), 
-  col.pal = rev(RColorBrewer::brewer.pal(5, "Spectral"))
-)
+# x <- read.csv("Documents/R Directories/redateline/Brydes_sample_density_data.csv")
+# plot.dens.func(
+#   "Documents/R Directories/redateline/sample1a", x, c("mlon", "mlat", "Avg.Dens")
+# )
+# plot.dens.func(
+#   "Documents/R Directories/redateline/sample1b", x, c("mlon", "mlat", "Avg.Dens"), 
+#   map.base = map.base.360, 
+#   breaks.val = c(0, 0.0001, 0.0003, 0.0005, 0.0006, max(x$Avg.Dens, na.rm = TRUE))
+# )
+# plot.dens.func(
+#   "Documents/R Directories/redateline/sample1c", x, c("mlon", "mlat", "Avg.Dens"), 
+#   map.base = map.base.360, 
+#   breaks.val = c(0, 0.0001, 0.0003, 0.0005, 0.0006, max(x$Avg.Dens, na.rm = TRUE)), 
+#   col.pal = rev(RColorBrewer::brewer.pal(5, "Spectral"))
+# )
 
 
 ##################################################################################################
