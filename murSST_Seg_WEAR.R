@@ -15,11 +15,30 @@ library(dplyr)
 library(ncdf4)
 library(purrr)
 
-# Paths to files
-# nc.path <- "../whale-model-prep_data/mursst_nc/"
-nc.path <- "J:/Sam_Woodman/mursst_nc/" # J is mmdisk on SMW computer
+### Paths to files
+source("User_script_local.R", local = TRUE, echo = FALSE)
 
-seg.path <- "../whale-model-prep_data/Segments/"
+## User path descriptions
+# nc.path:  Top-level folder for murSST nc files (this folder contains yearly folders, e.g. '2019')
+# seg.path: Folder with segment file
+
+if (user == "KAF") {
+  nc.path  <- "" 
+  seg.path <- ""
+  
+} else if (user == "EAB") {
+  nc.path  <- ""
+  seg.path <- ""
+  
+} else if (user == "SMW") {
+  # nc.path <- "../whale-model-prep_data/mursst_nc/"
+  nc.path <- "J:/Sam_Woodman/mursst_nc/" # J is mmdisk on SMW computer
+  seg.path <- "../whale-model-prep_data/Segments/"
+  
+} else {
+  stop("Invalid value supplied for 'user' object")
+}
+
 
 ###############################################################################
 ### Prep
