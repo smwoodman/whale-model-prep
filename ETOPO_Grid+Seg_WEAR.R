@@ -23,7 +23,7 @@ library(sf)
 
 ###############################################################################
 # Set path for ETOPO nc file, input segment file and output files 
-# Open grid pixel file and initialize variables
+# Specify whether you're extracting ETOPO data for grid or seg
 
 source("User_script_local.R", local = TRUE, echo = FALSE)
 grid.seg <- "grid" #"grid" or "seg"
@@ -80,6 +80,7 @@ if (user == "KAF") {
 
 #------------------------------------------------------------------------------
 ### Depth prep work
+# Open grid pixel file and initialize variables
 nc.file <- paste0(etopo.path, "etopo180_N10-60_W150-100.nc")
 nc.data <- nc_open(nc.file)
 ETOPO.lon   <- ncvar_get(nc.data, 'longitude')

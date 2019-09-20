@@ -3,6 +3,7 @@
 # If necessary, users should update file paths
 
 
+###############################################################################
 ## User path descriptions
 # path.ccsra:  Folder with extracted ccsra data, with one csv file per day
 # path.mursst: Folder with extracted mursst data, with one csv file per day
@@ -29,6 +30,7 @@ if (user == "KAF") {
 }
 
 
+###############################################################################
 ### Loop through and combine data from files
 files.ccsra <- list.files(path.ccsra, full.names = TRUE)
 files.mursst <- list.files(path.mursst, full.names = TRUE)
@@ -70,3 +72,5 @@ for (i in seq_along(files.ccsra)) {
   rm(curr.ccsra.date, curr.mursst.date)
 }; rm(i)
 # Sys.time() - d
+
+###############################################################################

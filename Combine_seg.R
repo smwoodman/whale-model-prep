@@ -4,6 +4,7 @@
 # By Sam Woodman, Nov 2018, WEAR project
 
 
+###############################################################################
 rm(list = ls())
 
 source("User_script_local.R", local = TRUE, echo = FALSE)
@@ -24,6 +25,7 @@ if (user == "KAF") {
 }
 
 
+###############################################################################
 ### Read in all data
 segs.orig   <- read.csv(paste0(path, "LgWhale_CCE_91_14_3km_Segs_BF0_6_Dec13_2018.csv"), stringsAsFactors = FALSE)
 segs.bathy  <- read.csv(paste0(path, "WEAR_seg_bathy.csv"), stringsAsFactors = FALSE)
@@ -47,3 +49,5 @@ segs.out <- segs.orig %>%
 # sum(is.na(segs.out$sst.SDspace))
 
 write.table(segs.out, outfile, sep = "," , col.names = TRUE, row.names = FALSE)
+
+###############################################################################

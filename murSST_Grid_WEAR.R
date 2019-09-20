@@ -30,7 +30,6 @@ library(sf)
 
 ### Paths to files
 source("User_script_local.R", local = TRUE, echo = FALSE)
-# user <- "SMW"
 
 ## User path descriptions
 # nc.path:  Top-level folder for murSST nc files (this folder contains yearly folders, e.g. '2019')

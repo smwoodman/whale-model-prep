@@ -21,11 +21,6 @@ library(maptools)
 
 # NOTE: function assumes coordinates are WGS 84 geographic coordinates
 
-# Sam testing
-# density.df <- read.csv("C:/Ensemble Tool/eSDM-data-local/eSDM_data_manuscript/Predictions_Becker_et_al_2016.csv")
-# plot.dens.func(density.df, c(1,2,3), plot.title = "Becker et al", legend.pos = 4, xlim = c(-125, -120), ylim = c(35, 40), cex = 1, pch = 18)
-
-
 
 # Plotting function
 plot.dens.func <- function(plot.file, density.df, col.names, map.base = NULL, pch = 19, cex = 0.5, 
@@ -33,22 +28,30 @@ plot.dens.func <- function(plot.file, density.df, col.names, map.base = NULL, pc
                            plot.title = "Plot", xlim = NULL, ylim = NULL, legend.pos = 4, 
                            file.width = 6, file.height = 6) {
   ### Inputs
+  # plot.file: character; filename of saved plot (map)
   # density.df: Data frame with at least three columns (longitude, latitude, prediction value)
   # col.names: Vector of three strings (names of columns) or numbers (indices of columns).
   #   Order of names or indicies must be longitude, latitude, and density values
-  # pch: Point type
-  # plot.title: Plot title, as string
+  # map.base: sfc object; land for map. Generated internally if necessary
+  # pch: integer; point type
+  # cex: numeric; point size
+  # col.pal:    character; vector with color values. Length must be one less than col.breaks
+  # col.breaks: numeric; vector with color break values. Length must be one greater than col.pal
+  # plot.title: character; plot title
   # xlim: x axis limits, e.g. c(-135, -115). Use range [-180, 180]
   # ylim: y axis limits, e.g. c(30, 50)
   # legend.pos: Legend position: 1 is bottom, 2 is left, 3 is top, and 4 is right of plot
+  # file.width:  numeric; width of png file being saved. Use this to constrain image longitude
+  # file.height: numeric; height of png file being saved. Use this to constrain image latitude
   
   
   if (is.null(map.base)) map.base <- st_as_sfc(maps::map('world', plot = FALSE, fill = TRUE))
-  # ^ Can be generated outide and passed to function for efficiency
+  # ^ should be generated outide and passed to function for efficiency
   
   stopifnot(
     is.data.frame(density.df), 
     length(col.names) == 3, 
+    min(density.df[, col.names[3]], na.rm = TRUE) > min(col.breaks), 
     max(density.df[, col.names[3]], na.rm = TRUE) < max(col.breaks), 
     length(col.pal) == (length(col.breaks) - 1)
   )
@@ -73,7 +76,7 @@ plot.dens.func <- function(plot.file, density.df, col.names, map.base = NULL, pc
   # graphics::box()
   # axis(1)#, at = c(-125, -120, -115), labels = TRUE)
   # axis(2)#, at = seq(from = 30, to = 50, by = 5), labels = TRUE)
-
+  
   dev.off()
   
 }

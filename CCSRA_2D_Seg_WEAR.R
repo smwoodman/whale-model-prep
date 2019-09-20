@@ -151,7 +151,7 @@ if (user=="KAF") {
   nc.pathNRT <- 'C:/Users/EABECKER/Documents/HabModels_CCE_1991_2014/Grid_data/wcnrt_daily/'   
   etopo.path <- 'C:/Users/EABECKER/Documents/HabModels_CCE_1991_2014/Grid_data/'
   
-} else if (user == "SMW") { #"SMW"
+} else if (user == "SMW") {
   seg.path <- "../whale-model-prep_data/Segments/"
   nc.path31 <- "../whale-model-prep_data/CCSRA_nc/CCSRA_wcra31_daily_2D_Jacox/"
   nc.pathNRT <- "../whale-model-prep_data/CCSRA_nc/CCSRA_NRT2011-2017_daily_2D_Jacox/"

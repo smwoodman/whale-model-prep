@@ -158,13 +158,13 @@ write.csv(grid.cent.df, file = outfile, row.names = FALSE)
 # plot(map.base, add = TRUE, col = "tan")
 
 ###############################################################################
-# Exp
-d <- eSDM::pts2poly_centroids(dplyr::select(grid.cent.df, lon180, lat, area_km), 0.027 / 2, crs = 4326) %>% 
-  mutate(base_idx = 1:85869)
-plot(st_geometry(d), border = "blue", add = TRUE)
-
-x.land <- st_read("C:/SMW/Ensemble Case Study/GIS_Work/Shapefiles/World_countries_trunc.shp")
-plot(x.land, add = TRUE, fill = "green")
-
-d.e <- st_erase(d, x.land) %>% 
-  mutate(area2_km = as.numeric(st_area(grid[grid.cent.which])) / 1e+06)
+# # Exp
+# d <- eSDM::pts2poly_centroids(dplyr::select(grid.cent.df, lon180, lat, area_km), 0.027 / 2, crs = 4326) %>% 
+#   mutate(base_idx = 1:85869)
+# plot(st_geometry(d), border = "blue", add = TRUE)
+# 
+# x.land <- st_read("C:/SMW/Ensemble Case Study/GIS_Work/Shapefiles/World_countries_trunc.shp")
+# plot(x.land, add = TRUE, fill = "green")
+# 
+# d.e <- st_erase(d, x.land) %>% 
+#   mutate(area2_km = as.numeric(st_area(grid[grid.cent.which])) / 1e+06)
