@@ -8,40 +8,7 @@
 
 
 ###############################################################################
-# Helper functions
-
-### Based on esdm_weighted_var_amv
-raimbow_se <- function(x) {
-  ### Inputs:
-  # x: numeric vector of values that were used to calculate mean
-  
-  x.mean <- mean(x, na.rm = TRUE)
-  
-  if (sum(!is.na(x)) == 0) {
-    NA
-  } else {
-    sqrt(sum((x - x.mean)^2, na.rm = TRUE) / length(x))
-  }
-}
-
-# ### For use within pmap() call
-# raimbow_se_pmap <- function(...) {
-#   ### Inputs:
-#   # input from pmpa
-# 
-#   x <- unlist(list(...))
-#   x.mean <- mean(x, na.rm = TRUE)
-#   
-#   if (sum(!is.na(x)) == 0) {
-#     NA
-#   } else {
-#     sqrt(sum((x - x.mean)^2, na.rm = TRUE) / (length(x) - 1))
-#   }
-# }
-
-
-###############################################################################
-raimbow_pre_whalepreds_aggregate <- function(
+whalepreds_aggregate <- function(
   x, x.cols, x.col.idx, aggr.level = NULL, range.dates = NULL, se.calc = FALSE) 
 {
   ### Inputs:
@@ -61,6 +28,37 @@ raimbow_pre_whalepreds_aggregate <- function(
   #   aggregated values
   
   ### Output: data frame of aggregated/summarized whale predictions.
+  
+  #----------------------------------------------------------------------------
+  # Helper functino used only in this function
+  ### Based on esdm_weighted_var_amv
+  raimbow_se <- function(x) {
+    ### Inputs:
+    # x: numeric vector of values that were used to calculate mean
+    
+    x.mean <- mean(x, na.rm = TRUE)
+    
+    if (sum(!is.na(x)) == 0) {
+      NA
+    } else {
+      sqrt(sum((x - x.mean)^2, na.rm = TRUE) / length(x))
+    }
+  }
+  
+  # ### For use within pmap() call
+  # raimbow_se_pmap <- function(...) {
+  #   ### Inputs:
+  #   # input from pmpa
+  # 
+  #   x <- unlist(list(...))
+  #   x.mean <- mean(x, na.rm = TRUE)
+  #   
+  #   if (sum(!is.na(x)) == 0) {
+  #     NA
+  #   } else {
+  #     sqrt(sum((x - x.mean)^2, na.rm = TRUE) / (length(x) - 1))
+  #   }
+  # }
   
   #----------------------------------------------------------------------------
   ### Process and check inputs

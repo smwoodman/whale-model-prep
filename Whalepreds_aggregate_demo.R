@@ -6,14 +6,14 @@ library(lubridate)
 library(purrr)
 library(readr)
 
-source("Preprocessing_whalepredictions.R")
+source("Whalepreds_aggregate.R")
 
 # Read in bidaily predictions
-x <- readr::read_csv("Data/Humpback 3km models/Model1_PredictionGrids/WEAR3km_76_2005-01-01to2019-08-14_daily_dens.csv")
+x <- readr::read_csv("../RAIMBOW/Data/Humpback 3km models/Model1_PredictionGrids/WEAR3km_76_2005-01-01to2019-08-14_daily_dens.csv")
 
 # # For sake of time on Sam's computer
 # saveRDS(x, file = "RDATA_files/3km_daily.rds")
-# x <- readRDS("RDATA_files/3km_daily.rds")
+# x <- readRDS("../RAIMBOW/RDATA_files/3km_daily.rds")
 
 
 ### Prep and use of function
@@ -31,12 +31,12 @@ range.dates <- seq(
 # Aggregate predictions. See 'Preprocessing_whalepredictions.R' for argument descriptions
 #   The two functions demonstrate the use of aggr.level vs range.dates;
 #   they give equivalent outputs
-y <- raimbow_pre_whalepreds_aggregate(
+y <- whalepreds_aggregate(
   x = x.curr, x.cols = 6:ncol(x.curr), x.col.idx = 9:18, 
   aggr.level = NULL, range.dates = range.dates, se.calc = FALSE
 )  
 
-y2 <- raimbow_pre_whalepreds_aggregate(
+y2 <- whalepreds_aggregate(
   x = x.curr, x.cols = 6:ncol(x.curr), x.col.idx = 9:18, 
   aggr.level = "7day", range.dates = NULL, se.calc = FALSE
 )  
