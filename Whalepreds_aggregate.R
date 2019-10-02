@@ -30,7 +30,10 @@ whalepreds_aggregate <- function(
   ### Output: data frame of aggregated/summarized whale predictions.
   
   #----------------------------------------------------------------------------
-  # Helper functino used only in this function
+  # Helper functions
+  
+  source("Whalepreds_aggregate_date.R", echo = FALSE, local = TRUE)
+  
   ### Based on esdm_weighted_var_amv
   raimbow_se <- function(x) {
     ### Inputs:
@@ -73,78 +76,20 @@ whalepreds_aggregate <- function(
   stopifnot(all(x.cols %in% names(x)))
   
   #----------------------------------------------------------------------------
-  # Prep
-  
-  ### Prep: extract data columns
-  x.other <- x %>% select(-!!x.cols)
+  ### Extract data columns, dates, and date intervals
+  x.other <- x %>% dplyr::select(-!!x.cols)
   x.data <- x %>% 
-    select(!!x.cols) %>% 
+    dplyr::select(!!x.cols) %>% 
     set_names(substr(names(.), min(x.col.idx), max(x.col.idx)))
   
-  ### Prep: get dates from column names
-  # Are dates separated by '.' or '_'?
-  if (all(grepl("[.]", names(x.data)))) {
-    tmp <- "."
-  } else if (all(grepl("_", names(x.data)))) {
-    tmp <- "_"
-  } else {
-    stop("The dates in the column names must all be separated by either '.' or '_'")
-  }
   
-  # Are dates 8 digit or 10 digit?
-  if (length(x.col.idx) == 8) {
-    cols.dates <- as.Date(names(x.data), format = paste0("%y", tmp, "%m", tmp, "%d"))
-    
-  } else if (length(x.col.idx) == 10) {
-    cols.dates <- as.Date(names(x.data), format = paste0("%Y", tmp, "%m", tmp, "%d"))
-    
-  } else {
-    stop("x.col.idx must be of length 8 (e.g. \"05_01_01\" or \"05.01.01\") ", 
-         "or 10 (e.g. \"2005_01_01\" or \"2005.01.01\")")
-  }
-  rm(tmp)
+  date.list <- whalepreds_aggregate_dates(
+    names(x.data), 1:10, aggr.level, range.dates
+  )
+  aggr.level  <- date.list$aggr.level
+  cols.dates  <- date.list$cols.dates
+  range.dates <- date.list$range.dates
   
-  ### Prep: generate dates to define specfied intervals
-  if (is.null(range.dates)) {
-    # Date range NOT is manually specified
-    stopifnot(
-      aggr.level %in% c("biweekly", "monthly") | grepl("day", aggr.level)
-    )
-    
-    if (aggr.level == "biweekly") {
-      range.dates <- seq(from = min(cols.dates), to = max(cols.dates), by = "2 week")
-      range.dates <- c(range.dates, max(range.dates) %m+% weeks(2))
-      
-    } else if (aggr.level == "monthly") {
-      range.dates <- seq(from = min(cols.dates), to = max(cols.dates), by = "1 month")
-      range.dates <- c(range.dates, max(range.dates) %m+% months(1))
-      
-    } else if (grepl("day", aggr.level)) {
-      day.int <- as.numeric(strsplit(aggr.level, "day")[[1]][1])
-      if (!inherits(day.int, "numeric")) {
-        stop("Please ensure aggr.level is either \"monthly\", \"biweekly\", ", 
-             "or in the form '#day', e.g. \"10day\"")
-      }
-      range.dates <- seq(from = min(cols.dates), to = max(cols.dates), by = paste(day.int, "day"))
-      range.dates <- c(range.dates, max(range.dates) %m+% days(day.int))
-      
-    } else {
-      stop("Error in aggr.level argument")
-    }
-    
-  } else {
-    # Date range is manually specified
-    stopifnot(inherits(range.dates, "Date"))
-    
-    date.between <- between(cols.dates, min(range.dates), max(range.dates) - 1)
-    aggr.level <- "user"
-    
-    if (!any(date.between)) {
-      stop("None of the column dates fall within an interval defined by range.dates")
-    } else if (!all(date.between)) {
-      warning("Not all column dates fall within an interval defined by range.dates")
-    }
-  }
   
   #----------------------------------------------------------------------------
   ### Map columns to date intervals
@@ -157,7 +102,7 @@ whalepreds_aggregate <- function(
     summarise(x_data_cols_list = list(x_data_cols)) %>%
     filter(between(cols_interval, 1, length(range.dates) - 1)) %>% 
     mutate(range_beg = gsub("-", "_", range.dates[cols_interval])) %>% 
-    select(cols_interval, range_beg, x_data_cols_list)
+    dplyr::select(cols_interval, range_beg, x_data_cols_list)
   
   
   if (nrow(x.key.summ) < (length(range.dates) - 1)) {
