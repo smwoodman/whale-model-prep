@@ -32,7 +32,11 @@ whalepreds_aggregate <- function(
   #----------------------------------------------------------------------------
   # Helper functions
   
-  source("Whalepreds_aggregate_date.R", echo = FALSE, local = TRUE)
+  # browser()
+  if (!exists("whalepreds_aggregate_dates")) {
+    stop("Please load the 'whalepreds_aggregate_dates' function by sourcing ", 
+         "Whalepreds_aggregate_dates.R")
+  }
   
   ### Based on esdm_weighted_var_amv
   raimbow_se <- function(x) {
