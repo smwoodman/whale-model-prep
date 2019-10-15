@@ -88,7 +88,7 @@ whalepreds_aggregate <- function(
   
   
   date.list <- whalepreds_aggregate_dates(
-    names(x.data), 1:10, aggr.level, range.dates
+    names(x.data), seq_along(x.col.idx), aggr.level, range.dates
   )
   aggr.level  <- date.list$aggr.level
   cols.dates  <- date.list$cols.dates
