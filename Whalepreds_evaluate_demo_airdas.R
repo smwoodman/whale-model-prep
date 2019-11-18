@@ -12,6 +12,7 @@ library(sf)
 
 
 source("Whalepreds_aggregate.R")
+source("Whalepreds_aggregate_dates.R")
 source("Whalepreds_evaluate.R")
 
 
@@ -30,13 +31,13 @@ if (user == "EAB") {
 } else if (user == "SMW") {
   path.prefix <- "../RAIMBOW/" # What Sam uses for RDS files
   filename.preds <- "../RAIMBOW/Data/Humpback 3km models/Model1_PredictionGrids/WEAR3km_76_2005-01-01to2019-08-14_daily_dens.csv"
-  filename.validation <- "../RAIMBOW/Data/Humpback 3km models/Validation/RREAS_1995-2016/RFwhales2_prey.csv"
-  path.out <- "../RAIMBOW/Plots/Whalepreds_evaluate_rockfish/"
+  filename.validation <- "../../DAS/airdas/RDATA_files/airdas_run.RDATA"
+  path.out <- "../RAIMBOW/Plots/Whalepreds_evaluate_airdas/"
 } else {
   stop("User not recognized")
 }
 
-
+  
 ###############################################################################
 # File reading and prep
 
@@ -52,8 +53,8 @@ x.curr <- readr::read_csv(filename.preds) %>%
 ### Predictions aggregated below
 
 ### Read in validation data
-y <- read_csv(
-  filename.validation, 
+y.rock <- read_csv(
+  "../RAIMBOW/Data/Humpback 3km models/Validation/RREAS_1995-2016/RFwhales2_prey.csv", 
   col_types = cols(
     .default = col_double(),
     GIS_KEY = col_character(),
@@ -62,10 +63,24 @@ y <- read_csv(
   )
 )
 
+load(filename.validation)
+save.image("eval_airdas.RDATA")
+
+load("eval_airdas.RDATA")
+y <- segdata # %>% mutate(mdate = as.Date(mtime))
+
+
 
 ###############################################################################
 # Runtime: ~7s for every date interval that has both preds and 
 #   validation data, i.e. the ## in 'Number of dates: ##' print statement
+c.y.cols <- c("mlon", "mlat", "mtime", "mn_nSI")
+c.plot.xlim <- c(-127, -119)
+c.plot.ylim <- c(34, 49)
+c.col.breaks <- c(0, 0.01, 0.02, 0.03, 0.05, 0.07, 0.09)
+c.col.pal <- NULL
+c.plot.main <- "Humpback"
+
 
 ### Monthly (note different x.col.idx)
 x.mon <- whalepreds_aggregate( 
@@ -73,13 +88,12 @@ x.mon <- whalepreds_aggregate(
   aggr.level = "monthly", range.dates = NULL, se.calc = FALSE
 )
 metrics.df.mon <- whalepreds_evaluate(
-  x = x.mon, y = y, 
-  x.cols = NULL, x.col.idx = 13:22, y.cols = c("lon", "lat", "dt", "HUWH"), 
+  x = x.mon, y = y, x.cols = NULL, x.col.idx = 13:22, y.cols = c.y.cols, 
   grid.rad = 0.027/2, 
   csv.filename = paste0(path.out, "monthly/metrics_monthly.csv"), 
   plot.path = paste0(path.out, "monthly/"), 
-  plot.xlim = c(-126, -117), plot.ylim = c(32, 42), 
-  col.breaks = c(0, 0.01, 0.02, 0.03, 0.05, 0.07, 0.09), col.pal = NULL 
+  plot.xlim = c.plot.xlim, plot.ylim = c.plot.ylim, 
+  col.breaks = c.col.breaks, col.pal = c.col.pal, plot.main = c.plot.main
 )
 
 ### 14 days; ~3.5 min
@@ -88,13 +102,12 @@ x.14d <- whalepreds_aggregate(
   aggr.level = "14day", range.dates = NULL, se.calc = FALSE
 )
 metrics.df.14d <- whalepreds_evaluate(
-  x = x.14d, y = y, 
-  x.cols = NULL, x.col.idx = 11:20, y.cols = c("lon", "lat", "dt", "HUWH"), 
+  x = x.14d, y = y, x.cols = NULL, x.col.idx = 11:20, y.cols = c.y.cols, 
   grid.rad = 0.027/2, 
   csv.filename = paste0(path.out, "14day/metrics_14day.csv"), 
   plot.path = paste0(path.out, "14day/"), 
-  plot.xlim = c(-126, -117), plot.ylim = c(32, 42), 
-  col.breaks = c(0, 0.01, 0.02, 0.03, 0.05, 0.07, 0.09), col.pal = NULL 
+  plot.xlim = c.plot.xlim, plot.ylim = c.plot.ylim, 
+  col.breaks = c.col.breaks, col.pal = c.col.pal, plot.main = c.plot.main
 )
 
 ### 7 days; ~5.5min
@@ -103,13 +116,12 @@ x.7d <- whalepreds_aggregate(
   aggr.level = "7day", range.dates = NULL, se.calc = FALSE
 )
 metrics.df.7d <- whalepreds_evaluate(
-  x = x.7d, y = y, 
-  x.cols = NULL, x.col.idx = 10:19, y.cols = c("lon", "lat", "dt", "HUWH"), 
+  x = x.7d, y = y, x.cols = NULL, x.col.idx = 10:19, y.cols = c.y.cols, 
   grid.rad = 0.027/2, 
   csv.filename = paste0(path.out, "7day/metrics_7day.csv"), 
   plot.path = paste0(path.out, "7day/"), 
-  plot.xlim = c(-126, -117), plot.ylim = c(32, 42), 
-  col.breaks = c(0, 0.01, 0.02, 0.03, 0.05, 0.07, 0.09), col.pal = NULL
+  plot.xlim = c.plot.xlim, plot.ylim = c.plot.ylim, 
+  col.breaks = c.col.breaks, col.pal = c.col.pal, plot.main = c.plot.main
 )
 
 

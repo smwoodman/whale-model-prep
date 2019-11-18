@@ -7,7 +7,8 @@ whalepreds_evaluate <- function(
   x, y, x.cols = NULL, x.col.idx, y.cols, grid.rad = 0.027/2, 
   csv.filename = NULL, plot.path = NULL, 
   plot.xlim = c(-127, -116.5), plot.ylim = c(31.5, 49), 
-  col.breaks = c(0, 0.01, 0.02, 0.03, 0.05, 0.07, 0.09), col.pal = NULL)
+  col.breaks = c(0, 0.01, 0.02, 0.03, 0.05, 0.07, 0.09), col.pal = NULL, 
+  plot.main = NULL)
 {
   ### Inputs
   # x: data.frame; Aggregated whale predictions
@@ -33,6 +34,8 @@ whalepreds_evaluate <- function(
   # col.pal: numeric; length one less than col.breaks; colors to be used 
   #   for color bins (from smallest to largest); 
   #   if NULL, palette will be generated using RColorBrewer 'YlGnBu'
+  # plot.main: character; if not NULL, the plot title will be 
+  #   paste(plot.main, date, sep = " - ")
   
   
   ### Output
@@ -130,16 +133,17 @@ whalepreds_evaluate <- function(
   
   #----------------------------------------------------------------------------
   ### Process validation data
+  stopifnot(
+    inherits(y[[y.cols[1]]], c("integer", "numeric")), 
+    inherits(y[[y.cols[2]]], c("integer", "numeric")), 
+    inherits(y[[y.cols[3]]], c("Date", "POSIXct")), 
+    inherits(y[[y.cols[4]]], c("integer", "numeric"))
+  )
+  
   y.data <- y %>% 
     select(lon = !!y.cols[1], lat = !!y.cols[2], 
-           dt = !!y.cols[3], valid_data = !!y.cols[4])
-  
-  stopifnot(
-    inherits(y.data$lon, c("integer", "numeric")), 
-    inherits(y.data$lat, c("integer", "numeric")), 
-    inherits(y.data$dt, "Date"), 
-    inherits(y.data$valid_data, c("integer", "numeric"))
-  )
+           dt = !!y.cols[3], valid_data = !!y.cols[4]) %>% 
+    mutate(dt = as.Date(dt)) #Since we only need dates
   
   
   #----------------------------------------------------------------------------
@@ -195,23 +199,26 @@ whalepreds_evaluate <- function(
     if (!(unique(vapply(tmp, length, 1)) == 1)) 
       warning("Some of the validation data points are outside of the ", 
               "provided plot limits", 
-              immediate. = TRUE)
+              call. = FALSE, immediate. = TRUE)
     rm(tmp, check.sfc, crop.bbox)
   }
-   
+  
   ### Calculate metrics and plot, if necessary
   metrics.list <- lapply(dates.both, function(i, j, j.plot, k) {
     print(i)
     k.curr <- k %>% filter(preds_col == i)
     
-    # browser()
     # If desired, plot and save predictions with overlaid validation data
     if (!is.null(plot.path)) {
       png(paste0(plot.path, i, ".png"), width = 6, height = 6*hw, 
           units = 'in', res = 450)
       
+      plot.main <- ifelse(
+        is.null(plot.main), i, paste(plot.main, i, sep = " - ")
+      )
+      
       plot(j[i], axes = TRUE, border = NA, breaks = col.breaks, pal = col.pal, 
-           xaxt = "n", xlim = plot.xlim, ylim = plot.ylim, 
+           main = plot.main, xaxt = "n", xlim = plot.xlim, ylim = plot.ylim,
            asp = 0, key.length = 1, key.pos = 4, reset = FALSE)
       sf::.degAxis(1, at = c(-125, -120))
       plot(st_geometry(filter(k.curr, valid_data_pa == 0)), add = TRUE, 
@@ -248,13 +255,5 @@ whalepreds_evaluate <- function(
   ### Return data frame
   metrics.df
 }
-
-
-# # Old code, stored here for now
-# j.bbox <- st_bbox(j)
-# xlim = c(j.bbox[c(1, 3)]), ylim = j.bbox[c(2, 4)], 
-# plot(k.curr["valid_data_pa"], add = TRUE, 
-#      pch = c(1, 19), cex = 0.4, pal = c("black", "red"), 
-#      key.pos = NULL, reset = FALSE)
 
 ###############################################################################
