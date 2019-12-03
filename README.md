@@ -29,5 +29,6 @@ Associated '_test' files contain code that tests the functions, while '_demo' fi
 * Concatenate_nc_files.r: Experimental code for concatenating nc files; not currently working
 * Funcs_WEAR.R: Helper processing functions for modeling prep work; sourced within some prep files
 * Funcs_plot_WEAR.R: Helper plotting functions for modeling prep work; sourced within some prep files
-* GridPlots.R: Function for plotting spatial data (i.e. `sf` objects)
+* GridPlots.R: Function for plotting spatial data (i.e. `sf` objects), specifically predictions
+* GridPlots_vars.R: Functions for reading in and plotting input variables
 * User_script_local.R: Script for determining whom is running the code (user info used to set appropriate file paths); sourced in prep files
