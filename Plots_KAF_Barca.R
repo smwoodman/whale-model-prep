@@ -38,8 +38,6 @@ rmap.base <- st_geometry(ne_states(country = "United States of America", returnc
 rmap.base2 <- ne_countries(scale = 10, continent = "North America", returnclass = "sf") %>% 
   filter(admin %in% c("Canada", "Mexico")) %>% 
   st_geometry()
-# map.base <- st_as_sfc(maps::map('world', plot = FALSE, fill = TRUE))
-# map.base2 <- st_as_sfc(maps::map('state', plot = FALSE, fill = TRUE))
 
 # save.image("../raimbow-local/RDATA_files/Plots_KAF_Barca.rdata")
 # load("../raimbow-local/RDATA_files/Plots_KAF_Barca.rdata")
@@ -59,8 +57,6 @@ for(i in names(x.14d.sf)[108:385]) {
        key.length = 1, key.pos = 4, reset = FALSE)
   plot(rmap.base, add = TRUE, col = "tan", border = "black")
   plot(rmap.base2, add = TRUE, col = "tan", border = "black")
-  # plot(map.base, add = TRUE, col = "brown")
-  # plot(map.base2, add = TRUE, col = "tan")
   
   txt.lab <- paste0(
     # "Biweekly\n", 
