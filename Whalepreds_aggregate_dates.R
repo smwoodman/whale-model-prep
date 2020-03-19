@@ -1,4 +1,4 @@
-# Generate range of dates into whcih to aggregate predictions
+# Generate range of dates into which to aggregate predictions
 # Originally simply part of whalepreds_aggregate(); 
 #   made into own function to allow for aggregating dates from filenames 
 #   (e.g. for aggregating Briana's raster predictions)
