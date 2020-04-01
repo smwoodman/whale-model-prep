@@ -137,7 +137,7 @@ grid.cent.df <- data.frame(
   lat = grid.cent.coords[, 2], 
   lon180 = ifelse(lon > 180, lon - 360, lon),
   lon360 = ifelse(lon < 0, lon + 360, lon),
-  area_km = as.numeric(st_area(grid[grid.cent.which])) / 1e+06
+  area_km = as.numeric(units::set_units(st_area(grid[grid.cent.which]), "km^2"))
 ) %>% 
   dplyr::arrange(lat, lon360) 
 
