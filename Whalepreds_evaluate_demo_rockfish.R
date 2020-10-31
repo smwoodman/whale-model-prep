@@ -12,6 +12,7 @@ library(sf)
 
 
 source("Whalepreds_aggregate.R")
+source("Whalepreds_aggregate_dates.R")
 source("Whalepreds_evaluate.R")
 
 
@@ -28,10 +29,10 @@ if (user == "EAB") {
 } else if (user == "KAF") {
   
 } else if (user == "SMW") {
-  path.prefix <- "../RAIMBOW/" # What Sam uses for RDS files
-  filename.preds <- "../RAIMBOW/Data/Humpback 3km models/Model1_PredictionGrids/WEAR3km_76_2005-01-01to2019-08-14_daily_dens.csv"
-  filename.validation <- "../RAIMBOW/Data/Humpback 3km models/Validation/RREAS_1995-2016/RFwhales2_prey.csv"
-  path.out <- "../RAIMBOW/Plots/Whalepreds_evaluate_rockfish/"
+  path.prefix <- "C:/SMW/RAIMBOW/raimbow-local/RDATA_files/" # What Sam uses for RDS files
+  filename.preds <- "C:/SMW/RAIMBOW/raimbow-local/Data/Humpback 3km models/Model1_PredictionGrids/WEAR3km_76_2005-01-01to2019-08-14_daily_dens.csv"
+  filename.validation <- "C:/SMW/RAIMBOW/raimbow-local/Data/Humpback 3km models/Validation/RREAS_1995-2016/RFwhales2_prey.csv"
+  path.out <- "C:/SMW/RAIMBOW/raimbow-local/Plots/Whalepreds_evaluate_rockfish/"
 } else {
   stop("User not recognized")
 }
@@ -44,8 +45,8 @@ if (user == "EAB") {
 x.curr <- readr::read_csv(filename.preds) %>% 
   select(pixel, mlat, mlon, mlon360, areakm, starts_with("76.dens."))
 
-# saveRDS(x, file = paste0(path.prefix, "RDATA_files/3km_daily.rds"))
-# x.curr <- readRDS(paste0(path.prefix, "RDATA_files/3km_daily.rds")) %>% 
+# saveRDS(x, file = paste0(path.prefix, "3km_daily.rds"))
+# x.curr <- readRDS(paste0(path.prefix, "3km_daily.rds")) %>%
 #   select(pixel, mlat, mlon, mlon360, areakm, starts_with("76.dens."))
 # ^ Sam's time-saver: save data frame as RDS file for faster reading
 
@@ -76,8 +77,8 @@ metrics.df.mon <- whalepreds_evaluate(
   x = x.mon, y = y, 
   x.cols = NULL, x.col.idx = 13:22, y.cols = c("lon", "lat", "dt", "HUWH"), 
   grid.rad = 0.027/2, 
-  csv.filename = paste0(path.out, "monthly/metrics_monthly.csv"), 
-  plot.path = paste0(path.out, "monthly/"), 
+  csv.filename = NULL, #paste0(path.out, "monthly/metrics_monthly.csv"), 
+  plot.path = NULL, #paste0(path.out, "monthly/"), 
   plot.xlim = c(-126, -117), plot.ylim = c(32, 42), 
   col.breaks = c(0, 0.01, 0.02, 0.03, 0.05, 0.07, 0.09), col.pal = NULL 
 )

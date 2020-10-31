@@ -121,10 +121,11 @@ whalepreds_evaluate <- function(
   )
   cols.intervals.ends <- c(
     tail(cols.dates, -1), 
-    ifelse(
-      is.na(dates.diff),  tail(cols.dates, 1) + months(1), #if interval is monthly
-      tail(cols.dates, 1) + days(dates.diff)               #if interval is # of days
-    )
+    if (is.na(dates.diff)) { #use if {} else {} b/c ifelse does some type coersion things
+      tail(cols.dates, 1) + months(1) #if interval is monthly
+    } else {
+      tail(cols.dates, 1) + days(dates.diff)#if interval is # of days
+    }
   )
   
   cols.intervals <- interval(cols.dates, cols.intervals.ends - days(1))
@@ -163,7 +164,7 @@ whalepreds_evaluate <- function(
   #----------------------------------------------------------------------------
   ### Filter data, and create sf objects for preds and validation data
   x.sf <- x.preds %>% 
-    select(cols.intervals.which) %>% 
+    select(all_of(cols.intervals.which)) %>% 
     st_sf(geometry = x.geom, agr = "constant")
   
   y.sf <- y.data %>% 
@@ -250,7 +251,7 @@ whalepreds_evaluate <- function(
     select(preds_col, AUC = 2, TSS = 3)
   
   ### Write metrics to a csv file if desired
-  if (!is.null(csv.filename)) write_csv(metrics.df, path = csv.filename)
+  if (!is.null(csv.filename)) write_csv(metrics.df, file = csv.filename)
   
   ### Return data frame
   metrics.df
