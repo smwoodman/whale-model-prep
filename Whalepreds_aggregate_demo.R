@@ -7,13 +7,14 @@ library(purrr)
 library(readr)
 
 source("Whalepreds_aggregate.R")
+source("Whalepreds_aggregate_dates.R")
 
 # Read in bidaily predictions
 x <- readr::read_csv("../RAIMBOW/Data/Humpback 3km models/Model1_PredictionGrids/WEAR3km_76_2005-01-01to2019-08-14_daily_dens.csv")
 
 # # For sake of time on Sam's computer
 # saveRDS(x, file = "RDATA_files/3km_daily.rds")
-# x <- readRDS("../RAIMBOW/RDATA_files/3km_daily.rds")
+# x <- readRDS("C:/SMW/RAIMBOW/raimbow-local/RDATA_files/3km_daily.rds")
 
 
 ### Prep and use of function

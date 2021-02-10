@@ -5,6 +5,7 @@
 ###############################################################################
 whalepreds_evaluate <- function(
   x, y, x.cols = NULL, x.col.idx, y.cols, grid.rad = 0.027/2, 
+  # aggr.level = NULL, 
   csv.filename = NULL, plot.path = NULL, 
   plot.xlim = c(-127, -116.5), plot.ylim = c(31.5, 49), 
   col.breaks = c(0, 0.01, 0.02, 0.03, 0.05, 0.07, 0.09), col.pal = NULL, 
@@ -22,6 +23,10 @@ whalepreds_evaluate <- function(
   #   in order, column names or indices of lon, lat, date, and validation data
   # grid.rad: numeric; radius (half of length of one side) of grid cells
   #   Default is for ~3km grid: 0.027 / 2
+  # aggr.level: NOT IMPLEMENTED 
+  #   character specifying the aggregation; 
+  #   this is required if x only contains one column with predictions.
+  #   Must be one of: "7d", "14d"
   # csv.filename: character; path and filename for csv file to which to save
   #   metrics info; if NULL, csv not saved
   
@@ -115,21 +120,22 @@ whalepreds_evaluate <- function(
   # Create intervals captured by each column
   d <- unique(diff(cols.dates))
   dates.diff <- ifelse(length(d == 1), d, NA)
-  d.last <- ifelse(
-    is.na(dates.diff),  tail(cols.dates, 1) + months(1), 
-    tail(cols.dates, 1) + days(dates.diff)
-  )
+  # d.last <- if (is.na(dates.diff)) {
+  #   tail(cols.dates, 1) %m+% months(1)
+  # } else {
+  #   tail(cols.dates, 1) + days(dates.diff)
+  # }
   cols.intervals.ends <- c(
     tail(cols.dates, -1), 
     if (is.na(dates.diff)) { #use if {} else {} b/c ifelse does some type coersion things
-      tail(cols.dates, 1) + months(1) #if interval is monthly
+      tail(cols.dates, 1) %m+% months(1) #if interval is monthly
     } else {
       tail(cols.dates, 1) + days(dates.diff)#if interval is # of days
     }
   )
   
   cols.intervals <- interval(cols.dates, cols.intervals.ends - days(1))
-  rm(d, dates.diff, d.last, cols.intervals.ends)
+  rm(d, dates.diff, cols.intervals.ends) #d.last
   
   
   #----------------------------------------------------------------------------
@@ -180,7 +186,7 @@ whalepreds_evaluate <- function(
   ### Dates with both preds and validation data
   dates.both <- sort(unique(y.sf$preds_col))
   if (length(dates.both) == 0) 
-    stop("No dates have both predictions and validation data - \nhave ", 
+    stop("No dates have both predictions and validation data - have ", 
          "predictions been aggregated correctly, and is 'x.col.idx' correct?")
   
   print(paste("Number of dates:", length(dates.both)))
